@@ -401,9 +401,6 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
                 }
             
             logger.info(f"Parsed result {parsed_result}")
-
-            # Calculate cost
-            cost_usd = 0.01
             
             # Handle S3 key storage
             # For non-Twilio calls, use the existing s3_key from media_item
@@ -438,7 +435,6 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
                 confidence_score=parsed_result.get('confidence'),
                 scam_label=parsed_result.get('label'),
                 processing_time_ms=processing_time,
-                cost_usd=cost_usd,
                 input_text=unified_message.text_body  # Caption/description if any
             )
             
@@ -452,78 +448,8 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
         
         except Exception as e:
             logger.error(f"Error in media analysis: {e}")
-            return "Sorry, there was an error analyzing your media. Please try again."
-        
-        # This code would run if MediaHandler was properly imported:
-        # success, media_bytes, content_type = MediaHandler.download_media(media_item, client_type_str)
-        # if not success:
-        #     return "Sorry, there was an error downloading your media. Please try again."
-        
-        # # Convert media bytes to base64 string for predict_response
-        # media_base64 = base64.b64encode(media_bytes).decode('utf-8')
-        
-        # # Analyze media
-        # prediction_result = predict_response(media_base64)
-        # processing_time = int((time.time() - start_time) * 1000)
-
-        # logger.info(f"Prediction result: {prediction_result}")
-
-        # # Parse the result
-        # parsed_result = {}
-        # if isinstance(prediction_result, dict) and "final_output" in prediction_result:
-        #     final_output_str = prediction_result.get("final_output", "{}")
-        #     try:
-        #         parsed_result = json.loads(final_output_str)
-        #     except json.JSONDecodeError as e:
-        #         logger.error(f"JSON decode failed: {e} | Raw: {final_output_str[:200]}...")
-        #         parsed_result = {
-        #             'label': 'Unknown',
-        #             'confidence': 0,
-        #             'reason': 'Unable to parse analysis result',
-        #             'recommendation': 'Please try again later'
-        #         }
-        
-        # logger.info(f"Parsed result {parsed_result}")
-
-        # # Calculate cost
-        # cost_usd = 0.01
-        
-        # # Upload to S3 if not already there (for Twilio media)
-        # s3_key = media_item.s3_key  # Will be None for Twilio media
-        # if not s3_key and client_type_str == ClientType.WHATSAPP:
-        #     upload_success, s3_key = MediaHandler.upload_to_s3(
-        #         media_bytes, 
-        #         unified_message.phone_number, 
-        #         unified_message.message_id, 
-        #         content_type
-        #     )
-        #     if not upload_success:
-        #         logger.error(f"Failed to upload media to S3 for {unified_message.phone_number}")
-        
-        # # Determine original media URL based on client type
-        # original_media_url = media_item.url if client_type_str == ClientType.WHATSAPP else None
-        
-        # Create submission record
-        submission = UserSubmission(
-            phone_number=unified_message.phone_number,
-            image_url=original_media_url,
-            s3_key=s3_key,
-            prediction_result=parsed_result,
-            confidence_score=parsed_result.get('confidence'),
-            scam_label=parsed_result.get('label'),
-            processing_time_ms=processing_time,
-            cost_usd=cost_usd,
-            input_text=unified_message.text_body  # Caption/description if any
-        )
-        
-        submission_id = db.create_submission(submission)
-        
-        return {
-            "body": parsed_result,
-            "submission_id": submission_id,
-            "client_type": client_type.value
-        }
-        
+            return "Sorry, there was an error analyzing your media. Please try again."   
+    
     except Exception as e:
         logger.error(f"Error analyzing media: {e}")
         return "Sorry, there was an error analyzing your media. Please try again."
@@ -659,9 +585,6 @@ def handle_text_analysis_unified(unified_message, client_type_str, db):
                 'recommendation': 'Please try again later'
             }
         
-        # Calculate cost (example: $0.005 per text analysis - cheaper than image)
-        cost_usd = 0.005
-        
         # Create submission record
         submission = UserSubmission(
             phone_number=unified_message.phone_number,
@@ -671,7 +594,6 @@ def handle_text_analysis_unified(unified_message, client_type_str, db):
             confidence_score=parsed_result.get('confidence'),
             scam_label=parsed_result.get('label'),
             processing_time_ms=processing_time,
-            cost_usd=cost_usd,
             input_text=unified_message.text_body
         )
         

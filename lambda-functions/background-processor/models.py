@@ -40,7 +40,6 @@ class UserSubmission:
     feedback_rating: Optional[int] = None
     feedback_text: Optional[str] = None
     feedback_timestamp: Optional[datetime] = None
-    cost_usd: float = 0.0
     input_text: Optional[str] = None
 
 @dataclass
@@ -61,7 +60,6 @@ class AnalyticsSummary:
     likely_scam_detected: int = 0
     unique_users: int = 0
     users_hit_limit: int = 0
-    total_cost_usd: float = 0.0
     avg_confidence_score: Optional[float] = None
     avg_processing_time_ms: Optional[int] = None
     feedback_count: int = 0
@@ -263,7 +261,6 @@ class DatabaseManager:
                 'confidence_score': submission.confidence_score,
                 'scam_label': submission.scam_label,
                 'processing_time_ms': submission.processing_time_ms,
-                'cost_usd': submission.cost_usd,
                 'input_text': submission.input_text
             }
             
@@ -395,7 +392,6 @@ class DatabaseManager:
                     likely_scam_detected=data['likely_scam_detected'],
                     unique_users=data['unique_users'],
                     users_hit_limit=data['users_hit_limit'],
-                    total_cost_usd=float(data['total_cost_usd']),
                     avg_confidence_score=data['avg_confidence_score'],
                     avg_processing_time_ms=data['avg_processing_time_ms'],
                     feedback_count=data['feedback_count'],

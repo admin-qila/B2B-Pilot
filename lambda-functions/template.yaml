@@ -1,0 +1,265 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'B2B Pilot Async Processing with Lambda and SQS'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - prod
+      - staging
+    Description: Deployment environment (prod or staging)
+  TwilioAccountSid:
+    Type: String
+    Description: Twilio Account SID
+    NoEcho: true
+  TwilioAuthToken:
+    Type: String
+    Description: Twilio Auth Token
+    NoEcho: true
+  TwilioPhoneNumber:
+    Type: String
+    Description: "Your Twilio WhatsApp number (format: whatsapp:+1234567890)"
+  ResponseFeedbackTemplate:
+    Type: String
+    Description: Response and Feedback template
+  SupabaseUrl:
+    Type: String
+    Description: Supabase project URL
+    Default: ""
+  SupabaseKey:
+    Type: String
+    Description: Supabase service role key
+    NoEcho: true
+    Default: ""
+  AiApiKey:
+    Type: String
+    Description: OpenAI API key for scam analysis
+    NoEcho: true
+  VirusTotalApiKey:
+    Type: String
+    Description: VirusTotal API key for URL scanning
+    NoEcho: true
+  GoogleSafeBrowsingKey:
+    Type: String
+    Description: Google Safe Browsing API key
+    NoEcho: true
+  S3BucketName:
+    Type: String
+    Description: S3 bucket for storing uploaded images
+  ApiKey:
+    Type: String
+    Description: Optional API key for webapp/mobile clients
+    Default: ""
+    NoEcho: true
+
+Globals:
+  Function:
+    Timeout: 300
+    Runtime: python3.12
+    MemorySize: 512
+    Environment:
+      Variables:
+        TWILIO_ACCOUNT_SID: !Ref TwilioAccountSid
+        TWILIO_AUTH_TOKEN: !Ref TwilioAuthToken
+        TWILIO_PHONE_NUMBER: !Ref TwilioPhoneNumber
+        RESPONSE_FEEDBACK_TEMPLATE: !Ref ResponseFeedbackTemplate
+        SUPABASE_URL: !Ref SupabaseUrl
+        SUPABASE_KEY: !Ref SupabaseKey
+        AI_API_KEY: !Ref AiApiKey
+        VIRUSTOTAL_API_KEY: !Ref VirusTotalApiKey
+        GOOGLE_SAFE_BROWSING_KEY: !Ref GoogleSafeBrowsingKey
+        S3_BUCKET_NAME: !Ref S3BucketName
+        API_KEY: !Ref ApiKey
+
+Resources:
+
+  # Main SQS Queue
+  MessageQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "b2b-pilot-messages-${Environment}"
+      VisibilityTimeout: 360
+      MessageRetentionPeriod: 86400
+      ReceiveMessageWaitTimeSeconds: 20
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: Application
+          Value: B2B-Pilot
+        - Key: Purpose
+          Value: WhatsAppProcessing
+
+  # Dead Letter Queue
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "b2b-pilot-messages-dlq-${Environment}"
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: Application
+          Value: B2B-Pilot
+        - Key: Purpose
+          Value: FailedMessages
+
+  # Webhook Lambda
+  WebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "b2b-pilot-webhook-handler-${Environment}"
+      CodeUri: webhook-handler/
+      Handler: handler.lambda_handler
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref MessageQueue
+          SQS_DLQ_URL: !Ref DeadLetterQueue
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt MessageQueue.QueueName
+      Events:
+        WebhookApi:
+          Type: Api
+          Properties:
+            Path: /sms
+            Method: post
+            RestApiId: !Ref WebhookApi
+
+  # API Gateway
+  WebhookApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "b2b-pilot-webhook-api-${Environment}"
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'POST, OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Twilio-Signature,X-Client-Type,Authorization,X-Api-Key,X-Amz-Date,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+      Auth:
+        ApiKeyRequired: false
+      EndpointConfiguration:
+        Type: REGIONAL
+
+  # Processor Lambda
+  ProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "b2b-pilot-background-processor-${Environment}"
+      CodeUri: background-processor/
+      Handler: handler.lambda_handler
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref MessageQueue
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt MessageQueue.QueueName
+        - SQSPollerPolicy:
+            QueueName: !GetAtt MessageQueue.QueueName
+        - S3CrudPolicy:
+            BucketName: !Ref S3BucketName
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt MessageQueue.Arn
+            BatchSize: 5
+            MaximumBatchingWindowInSeconds: 5
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+
+  # Presigned URL Lambda
+  PresignedUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "b2b-pilot-presigned-url-${Environment}"
+      CodeUri: presigned-url/
+      Handler: handler.lambda_handler
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref S3BucketName
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3BucketName
+      Events:
+        PresignedUrlApi:
+          Type: Api
+          Properties:
+            Path: /presigned_url
+            Method: post
+            RestApiId: !Ref WebhookApi
+        PresignedUrlGetApi:
+          Type: Api
+          Properties:
+            Path: /presigned_url
+            Method: get
+            RestApiId: !Ref WebhookApi
+        PresignedUrlOptions:
+          Type: Api
+          Properties:
+            Path: /presigned_url
+            Method: options
+            RestApiId: !Ref WebhookApi
+
+  # CloudWatch Alarms
+  QueueDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-queue-depth-high-${Environment}"
+      AlarmDescription: Alert when queue backlog grows
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 100
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt MessageQueue.QueueName
+
+  DLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-dlq-messages-${Environment}"
+      AlarmDescription: Alert when messages enter the DLQ
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt DeadLetterQueue.QueueName
+
+  ProcessorErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-processor-errors-${Environment}"
+      AlarmDescription: Alert when processor Lambda errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ProcessorFunction
+
+Outputs:
+  WebhookUrl:
+    Description: Twilio webhook URL
+    Value: !Sub "https://${WebhookApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/sms"
+  QueueUrl:
+    Description: SQS Queue URL
+    Value: !Ref MessageQueue
+  DLQUrl:
+    Description: Dead Letter Queue URL
+    Value: !Ref DeadLetterQueue
+  PresignedUrlEndpoint:
+    Description: Presigned URL API endpoint
+    Value: !Sub "https://${WebhookApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/presigned_url"

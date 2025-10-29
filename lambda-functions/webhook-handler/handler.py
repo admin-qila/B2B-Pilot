@@ -93,15 +93,6 @@ def lambda_handler(event, context):
             )
         
         logger.info(f"Processing message from {unified_message.phone_number} with {len(unified_message.media_items)} media items")
-        
-        # Check allowlist (primarily for WhatsApp)
-        is_allowed, allowlist_error = ValidationFactory.check_allowlist(
-            unified_message.phone_number, 
-            client_type
-        )
-        if not is_allowed:
-            logger.warning(f"Phone number not in allowlist: {unified_message.phone_number}")
-            return ResponseFactory.create_allowlist_error_response(client_type)
 
         # Send to SQS
         try:

@@ -239,47 +239,6 @@ def process_unified_message(unified_message: UnifiedMessage, twilio_client, cont
         if client_type_str == "whatsapp" and unified_message.button_text:
             return handle_button_feedback(unified_message)
         
-        # Check user consent (WhatsApp only for now)
-        if client_type_str == "whatsapp":
-            if not check_user_consent(unified_message.phone_number):
-                consent_message = """⚠️ Consent Required
-        
-Before we can analyze your message, you need to accept our Terms of Service and Privacy Policy.
-        
-👆 Please visit: https://www.qilafy.com/signup
-        
-After accepting, send your message again."""
-                send_whatsapp_message(
-                    twilio_client,
-                    to_number=unified_message.from_number,
-                    from_number=TWILIO_PHONE_NUMBER,
-                    body=consent_message
-                )
-                return True
-            
-            # Check usage limits (WhatsApp only for now)
-            usage_info = check_usage_limits(unified_message.phone_number)
-            logger.info(f"usage info: {usage_info}")
-            if not usage_info.get('can_proceed', False):
-                time_until_reset = usage_info.get('time_until_reset', timedelta(hours=24))
-                hours = int(time_until_reset.total_seconds() // 3600)
-                minutes = int((time_until_reset.total_seconds() % 3600) // 60)
-                
-                limit_message = f"""⏰ Daily Limit Reached
-        
-You've used {usage_info.get('current_count', 0)}/{usage_info.get('daily_limit', 10)} analyses today.
-        
-🔄 Reset in: {hours}h {minutes}m
-        
-💎 Want more? Please reach out to support@qilafy.com"""
-                send_whatsapp_message(
-                    twilio_client,
-                    to_number=unified_message.from_number,
-                    from_number=TWILIO_PHONE_NUMBER,
-                    body=limit_message
-                )
-                return True
-        
         # Process content based on type
         response_data = None
         if unified_message.media_items:

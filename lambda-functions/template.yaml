@@ -122,7 +122,7 @@ Resources:
         WebhookApi:
           Type: Api
           Properties:
-            Path: /sms
+            Path: /authenticity_check
             Method: post
             RestApiId: !Ref WebhookApi
 
@@ -253,7 +253,7 @@ Resources:
 Outputs:
   WebhookUrl:
     Description: Twilio webhook URL
-    Value: !Sub "https://${WebhookApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/sms"
+    Value: !Sub "https://${WebhookApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticity_check"
   QueueUrl:
     Description: SQS Queue URL
     Value: !Ref MessageQueue

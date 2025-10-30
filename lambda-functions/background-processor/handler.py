@@ -306,74 +306,117 @@ def handle_button_feedback(unified_message: UnifiedMessage) -> bool:
 def process_media_message(unified_message, client_type_str, max_processing_time):
     """
     Process media message for scam detection from any client type
+    Supports up to 3 images at once
     """
     db = get_db()
     if not db:
         return "Sorry, database service is temporarily unavailable. Please try again later."
     
-    # Get first media item
+    # Check for media items
     if not unified_message.media_items:
         return "No media found in your message. Please send an image for analysis."
-        
-    media_item = unified_message.media_items[0]
+    
+    # Limit to maximum 3 images
+    media_items_to_process = unified_message.media_items[:3]
+    logger.info(f"Processing {len(media_items_to_process)} media item(s)")
     
     try:
-        # Download media based on client type
+        # Download all media items
         start_time = time.time()
+        downloaded_images = []
+        s3_keys = []
+        original_media_urls = []
         
-        # Handle Twilio WhatsApp calls with media URL
-        if client_type_str == "whatsapp" and media_item.url:
-            # Download from Twilio URL
-            try:
-                # Real Twilio media URL - download with authentication
-                auth = (os.getenv("TWILIO_ACCOUNT_SID", os.environ.get('TWILIO_ACCOUNT_SID')), 
-                       os.getenv("TWILIO_AUTH_TOKEN", os.environ.get('TWILIO_AUTH_TOKEN')))
-                response = requests.get(media_item.url, auth=auth, timeout=30)
-                response.raise_for_status()
-                image_bytes = response.content
-                content_type = response.headers.get('content-type', 'image/jpeg')
-            except Exception as e:
-                logger.error(f"Error downloading media: {e}")
-                return "Sorry, there was an error downloading your media. Please try again."
+        for idx, media_item in enumerate(media_items_to_process):
+            logger.info(f"Downloading media item {idx + 1}/{len(media_items_to_process)}")
+            
+            # Handle Twilio WhatsApp calls with media URL
+            if client_type_str == "whatsapp" and media_item.url:
+                # Download from Twilio URL
+                try:
+                    # Real Twilio media URL - download with authentication
+                    auth = (os.getenv("TWILIO_ACCOUNT_SID", os.environ.get('TWILIO_ACCOUNT_SID')), 
+                           os.getenv("TWILIO_AUTH_TOKEN", os.environ.get('TWILIO_AUTH_TOKEN')))
+                    response = requests.get(media_item.url, auth=auth, timeout=30)
+                    response.raise_for_status()
+                    image_bytes = response.content
+                    content_type = response.headers.get('content-type', 'image/jpeg')
+                    
+                    downloaded_images.append(image_bytes)
+                    original_media_urls.append(media_item.url)
+                    
+                    # Upload to S3 for WhatsApp media
+                    try:
+                        s3_service = get_s3_service()
+                        if s3_service:
+                            upload_success, s3_key = s3_service.upload_image(
+                                image_data=image_bytes,
+                                phone_number=unified_message.phone_number,
+                                submission_id=f"{unified_message.message_id}_{idx}",
+                                content_type=content_type
+                            )
+                            if upload_success:
+                                s3_keys.append(s3_key)
+                            else:
+                                s3_keys.append(None)
+                                logger.error(f"Failed to upload media {idx} to S3")
+                        else:
+                            s3_keys.append(None)
+                    except Exception as e:
+                        logger.warning(f"S3 upload failed for media {idx}: {e}")
+                        s3_keys.append(None)
+                        
+                except Exception as e:
+                    logger.error(f"Error downloading media {idx}: {e}")
+                    # Continue with other images even if one fails
+                    continue
+            
+            # Handle non-Twilio calls with S3 key (webapp/mobile/other sources)
+            elif media_item.s3_key:
+                try:
+                    logger.info(f"Processing non-Twilio media from S3: {media_item.s3_key}")
+                    logger.info(f"Client type: {client_type_str}, Phone: {unified_message.phone_number}")
+                    
+                    # Download from S3
+                    bucket_name = os.environ.get('S3_BUCKET_NAME')
+                    if not bucket_name:
+                        logger.error("S3_BUCKET_NAME environment variable not set")
+                        continue
+                    
+                    logger.info(f"Attempting S3 download - Bucket: {bucket_name}, Key: {media_item.s3_key}")
+                    response = s3.get_object(Bucket=bucket_name, Key=media_item.s3_key)
+                    image_bytes = response['Body'].read()
+                    content_type = response.get('ContentType', media_item.content_type or 'image/jpeg')
+                    
+                    logger.info(f"Successfully downloaded {len(image_bytes)} bytes from S3")
+                    
+                    downloaded_images.append(image_bytes)
+                    s3_keys.append(media_item.s3_key)
+                    original_media_urls.append(None)
+                    
+                except Exception as e:
+                    logger.error(f"Error downloading media {idx} from S3: {e}")
+                    continue
+            
+            else:
+                logger.warning(f"No valid media source for media item {idx}, client type {client_type_str}")
+                continue
         
-        # Handle non-Twilio calls with S3 key (webapp/mobile/other sources)
-        elif media_item.s3_key:
-            try:
-                logger.info(f"Processing non-Twilio media from S3: {media_item.s3_key}")
-                logger.info(f"Client type: {client_type_str}, Phone: {unified_message.phone_number}")
-                
-                # Download from S3
-                bucket_name = os.environ.get('S3_BUCKET_NAME')
-                if not bucket_name:
-                    logger.error("S3_BUCKET_NAME environment variable not set")
-                    return "Sorry, there was an error accessing the media storage. Please try again."
-                
-                logger.info(f"Attempting S3 download - Bucket: {bucket_name}, Key: {media_item.s3_key}")
-                response = s3.get_object(Bucket=bucket_name, Key=media_item.s3_key)
-                image_bytes = response['Body'].read()
-                content_type = response.get('ContentType', media_item.content_type or 'image/jpeg')
-                
-                logger.info(f"Successfully downloaded {len(image_bytes)} bytes from S3")
-                
-                # Log additional text if present
-                if unified_message.text_body:
-                    logger.info(f"Additional text provided: {unified_message.text_body[:100]}...")
-                
-            except Exception as e:
-                logger.error(f"Error downloading media from S3: {e}")
-                return "Sorry, there was an error downloading your media. Please try again."
+        # Check if we downloaded at least one image
+        if not downloaded_images:
+            return "Sorry, there was an error downloading your media. Please try again."
         
-        else:
-            logger.warning(f"No valid media source for client type {client_type_str}")
-            return "Sorry, media processing is temporarily unavailable for this client type."
+        # Log additional text if present
+        if unified_message.text_body:
+            logger.info(f"Additional text provided: {unified_message.text_body[:100]}...")
         
         # Continue with analysis
         try:
-            # Convert media bytes to base64 string for predict_response
-            media_base64 = base64.b64encode(image_bytes).decode('utf-8')
+            # Convert all media bytes to base64 strings for predict_response
+            media_base64_list = [base64.b64encode(img_bytes).decode('utf-8') for img_bytes in downloaded_images]
             
-            # Analyze media
-            prediction_result = predict_response(media_base64)
+            # Analyze media (pass list of base64 images)
+            prediction_result = predict_response(media_base64_list)
             processing_time = int((time.time() - start_time) * 1000)
 
             logger.info(f"Prediction result: {prediction_result}")
@@ -402,40 +445,29 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
             
             logger.info(f"Parsed result {parsed_result}")
             
-            # Handle S3 key storage
-            # For non-Twilio calls, use the existing s3_key from media_item
-            # For WhatsApp/Twilio calls, upload to S3 and get new s3_key
-            s3_key = media_item.s3_key  # Use existing s3_key if available (non-Twilio)
+            # Store S3 keys and original URLs as JSON arrays
+            # Filter out None values
+            s3_keys_filtered = [k for k in s3_keys if k is not None]
+            original_urls_filtered = [u for u in original_media_urls if u is not None]
             
-            if client_type_str == "whatsapp" and not s3_key:
-                # Only upload if it's a WhatsApp call and doesn't already have an s3_key
-                try:
-                    s3_service = get_s3_service()
-                    if s3_service:
-                        upload_success, s3_key = s3_service.upload_image(
-                            image_data=image_bytes,
-                            phone_number=unified_message.phone_number,
-                            submission_id=unified_message.message_id,
-                            content_type=content_type
-                        )
-                        if not upload_success:
-                            logger.error(f"Failed to upload media to S3 for {unified_message.phone_number}")
-                except Exception as e:
-                    logger.warning(f"S3 upload failed: {e}")
+            # Use first S3 key and URL for backward compatibility, or store as JSON
+            primary_s3_key = s3_keys_filtered[0] if s3_keys_filtered else None
+            primary_media_url = original_urls_filtered[0] if original_urls_filtered else None
             
-            # Determine original media URL based on client type
-            original_media_url = media_item.url if client_type_str == "whatsapp" else None
-            
-            # Create submission record
+            # Create submission record with primary image info
+            # Note: We store the first image URL/S3 key in the main fields for backward compatibility
+            # All S3 keys and URLs are stored in separate JSON fields for multi-image support
             submission = UserSubmission(
                 phone_number=unified_message.phone_number,
-                image_url=original_media_url,
-                s3_key=s3_key,
+                image_url=primary_media_url,
+                s3_key=primary_s3_key,
                 prediction_result=parsed_result,
                 confidence_score=parsed_result.get('confidence'),
                 scam_label=parsed_result.get('label'),
                 processing_time_ms=processing_time,
-                input_text=unified_message.text_body  # Caption/description if any
+                input_text=unified_message.text_body,  # Caption/description if any
+                all_s3_keys=s3_keys_filtered if len(s3_keys_filtered) > 1 else None,  # Store all if multiple
+                all_image_urls=original_urls_filtered if len(original_urls_filtered) > 1 else None  # Store all if multiple
             )
             
             submission_id = db.create_submission(submission)

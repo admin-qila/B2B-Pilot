@@ -40,6 +40,9 @@ class UserSubmission:
     feedback_text: Optional[str] = None
     feedback_timestamp: Optional[datetime] = None
     input_text: Optional[str] = None
+    # Optional fields for multiple images (up to 3)
+    all_s3_keys: Optional[List[str]] = None  # All S3 keys as JSON array
+    all_image_urls: Optional[List[str]] = None  # All image URLs as JSON array
 
 @dataclass
 class UsageInfo:
@@ -261,6 +264,12 @@ class DatabaseManager:
                 'processing_time_ms': submission.processing_time_ms,
                 'input_text': submission.input_text
             }
+            
+            # Add optional fields for multiple images if provided
+            if submission.all_s3_keys is not None:
+                data['all_s3_keys'] = json.dumps(submission.all_s3_keys)
+            if submission.all_image_urls is not None:
+                data['all_image_urls'] = json.dumps(submission.all_image_urls)
             
             response = self.supabase.table('b2b_pilot_user_submissions').insert(data).execute()
             if response.data:

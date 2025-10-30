@@ -11,7 +11,7 @@ import whois
 import json
 import re
 from langchain.agents import Tool
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, List
 import logging
 from io import BytesIO
 from PIL import Image
@@ -67,16 +67,19 @@ def summarize_website_checks(url_checks: Dict[str, Any]) -> str:
             summaries.append(f"URL: {url} - Verdict: {reason_str}")
     return "\n".join(summaries)
 
-def predict_response(input_data: Union[str, bytes]) -> Dict[str, Any]:
+def predict_response(input_data: Union[str, bytes, List[str]]) -> Dict[str, Any]:
     """
     Main entry point for scam detection.
     
     - Text input: Extract websites → Check URL safety → Analyze text
-    - Image input: Analyze image (extracts websites) → Check URL safety → Re-analyze with safety data
+    - Image input (single or list): Analyze image(s) (extracts websites) → Check URL safety → Re-analyze with safety data
     """
     result = {"input_type": None, "steps": [], "final_output": None}
     
-    if isinstance(input_data, str) and not is_base64_image(input_data):
+    # Check if it's a list of images
+    if isinstance(input_data, list):
+        return _process_image_input(input_data, result)
+    elif isinstance(input_data, str) and not is_base64_image(input_data):
         return _process_text_input(input_data, result)
     elif isinstance(input_data, str) and is_base64_image(input_data):
         return _process_image_input(input_data, result)
@@ -94,8 +97,15 @@ def _process_text_input(text_input: str, result: Dict[str, Any]) -> Dict[str, An
     )
 
 
-def _process_image_input(image_data: str, result: Dict[str, Any]) -> Dict[str, Any]:
-    """Process image input for scam detection."""
+def _process_image_input(image_data: Union[str, List[str]], result: Dict[str, Any]) -> Dict[str, Any]:
+    """Process image input (single or multiple) for scam detection."""
+    # Convert single image to list for uniform processing
+    if isinstance(image_data, str):
+        image_data = [image_data]
+    
+    # Limit to maximum 3 images
+    image_data = image_data[:3]
+    
     return _process_with_analysis(
         input_data=image_data,
         input_type="image",
@@ -105,7 +115,7 @@ def _process_image_input(image_data: str, result: Dict[str, Any]) -> Dict[str, A
 
 
 def _process_with_analysis(
-    input_data: str,
+    input_data: Union[str, List[str]],
     input_type: str,
     analysis_tool: str,
     result: Dict[str, Any]
@@ -113,6 +123,10 @@ def _process_with_analysis(
     """Unified processing logic for both text and image inputs."""
     logger.info(f"Processing {input_type} input")
     result["input_type"] = input_type
+    
+    # Log number of images if processing multiple
+    if isinstance(input_data, list):
+        logger.info(f"Processing {len(input_data)} images")
     
     # Perform initial analysis
     result["steps"].append(analysis_tool)
@@ -210,12 +224,13 @@ def parse_prediction_result(result_text):
 
 
 
-def get_openai_image_scam_analysis(image_base64: str) -> str:
+def get_openai_image_scam_analysis(image_data: Union[str, List[str]]) -> str:
     """
-    Calls the OpenAI GPT-5 model with a base64 encoded image to perform scam analysis.
+    Calls the OpenAI GPT-5 model with base64 encoded image(s) to perform scam analysis.
 
     Args:
-        image_base64 (str): The base64 encoded string of the input image.
+        image_data (Union[str, List[str]]): The base64 encoded string(s) of the input image(s).
+                                            Can be a single string or list of up to 3 strings.
 
     Returns:
         str: The analysis result from the OpenAI model, or an error message.
@@ -318,24 +333,35 @@ Special Rule:
         return "Error: OpenAI API key not found. Please set the AI_API_KEY environment variable."
 
     try:
+        # Convert single image to list for uniform processing
+        if isinstance(image_data, str):
+            image_list = [image_data]
+        else:
+            image_list = image_data[:3]  # Limit to 3 images
+        
         client = OpenAI(
             api_key=openai_key,
         )
 
-        messages = [{"role": "system", "content": system_role},
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": f"Is there some form of deception in this image? Please respond in the same language as used in the message."},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/png;base64,{image_base64}"
-                                },
-                            }
-                        ]
-                    }
-                    ]
+        # Build content array with text and all images
+        user_content = [
+            {"type": "text", "text": f"Is there some form of deception in {'this image' if len(image_list) == 1 else 'these images'}? Please respond in the same language as used in the message."}
+        ]
+        
+        # Add all images to the content array
+        for image_base64 in image_list:
+            user_content.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/png;base64,{image_base64}"
+                },
+            })
+        
+        messages = [
+            {"role": "system", "content": system_role},
+            {"role": "user", "content": user_content}
+        ]
+        
         chat_completion = client.chat.completions.create(
             model="gpt-5",
             messages=messages

@@ -445,29 +445,39 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
             
             logger.info(f"Parsed result {parsed_result}")
             
-            # Store S3 keys and original URLs as JSON arrays
-            # Filter out None values
+            # Filter out None values from S3 keys and URLs
             s3_keys_filtered = [k for k in s3_keys if k is not None]
             original_urls_filtered = [u for u in original_media_urls if u is not None]
             
-            # Use first S3 key and URL for backward compatibility, or store as JSON
-            primary_s3_key = s3_keys_filtered[0] if s3_keys_filtered else None
-            primary_media_url = original_urls_filtered[0] if original_urls_filtered else None
+            # Determine values for image_url and s3_key fields:
+            # - Single image: store as string (backward compatible)
+            # - Multiple images: store as list (will be converted to JSONB)
+            if len(s3_keys_filtered) == 1:
+                s3_key_value = s3_keys_filtered[0]
+            elif len(s3_keys_filtered) > 1:
+                s3_key_value = s3_keys_filtered
+            else:
+                s3_key_value = None
             
-            # Create submission record with primary image info
-            # Note: We store the first image URL/S3 key in the main fields for backward compatibility
-            # All S3 keys and URLs are stored in separate JSON fields for multi-image support
+            if len(original_urls_filtered) == 1:
+                image_url_value = original_urls_filtered[0]
+            elif len(original_urls_filtered) > 1:
+                image_url_value = original_urls_filtered
+            else:
+                image_url_value = None
+            
+            # Create submission record
+            # For single images: stores as string (backward compatible)
+            # For multiple images: stores as list which will be converted to JSONB
             submission = UserSubmission(
                 phone_number=unified_message.phone_number,
-                image_url=primary_media_url,
-                s3_key=primary_s3_key,
+                image_url=image_url_value,
+                s3_key=s3_key_value,
                 prediction_result=parsed_result,
                 confidence_score=parsed_result.get('confidence'),
                 scam_label=parsed_result.get('label'),
                 processing_time_ms=processing_time,
-                input_text=unified_message.text_body,  # Caption/description if any
-                all_s3_keys=s3_keys_filtered if len(s3_keys_filtered) > 1 else None,  # Store all if multiple
-                all_image_urls=original_urls_filtered if len(original_urls_filtered) > 1 else None  # Store all if multiple
+                input_text=unified_message.text_body  # Caption/description if any
             )
             
             submission_id = db.create_submission(submission)

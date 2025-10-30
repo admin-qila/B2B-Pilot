@@ -7,7 +7,7 @@ import os
 import json
 import logging
 from datetime import datetime, date, timedelta
-from typing import Optional, Dict, List, Tuple, Any
+from typing import Optional, Dict, List, Tuple, Any, Union
 from dataclasses import dataclass
 from supabase import create_client, Client
 
@@ -27,11 +27,16 @@ logger.info("Supabase client initialized successfully")
 
 @dataclass
 class UserSubmission:
-    """Data class for user submissions"""
+    """Data class for user submissions
+    
+    Note: image_url and s3_key can be either:
+    - String: Single image (backward compatible)
+    - List[str]: Multiple images (up to 3)
+    """
     id: Optional[str] = None
     phone_number: str = ""
-    image_url: Optional[str] = None
-    s3_key: Optional[str] = None  # S3 object key for stored image
+    image_url: Optional[Union[str, List[str]]] = None  # Single URL or list of URLs
+    s3_key: Optional[Union[str, List[str]]] = None  # Single S3 key or list of S3 keys
     prediction_result: Optional[Dict] = None
     confidence_score: Optional[float] = None
     scam_label: Optional[str] = None
@@ -40,9 +45,6 @@ class UserSubmission:
     feedback_text: Optional[str] = None
     feedback_timestamp: Optional[datetime] = None
     input_text: Optional[str] = None
-    # Optional fields for multiple images (up to 3)
-    all_s3_keys: Optional[List[str]] = None  # All S3 keys as JSON array
-    all_image_urls: Optional[List[str]] = None  # All image URLs as JSON array
 
 @dataclass
 class UsageInfo:
@@ -252,24 +254,33 @@ class DatabaseManager:
     
     # Submission Management
     def create_submission(self, submission: UserSubmission) -> Optional[str]:
-        """Create a new user submission record"""
+        """Create a new user submission record
+        
+        Handles both single and multiple images:
+        - Single image: stores as string (backward compatible)
+        - Multiple images: stores as JSON array
+        """
         try:
+            # Handle image_url - convert list to JSON if multiple images
+            image_url_value = submission.image_url
+            if isinstance(image_url_value, list):
+                image_url_value = json.dumps(image_url_value)
+            
+            # Handle s3_key - convert list to JSON if multiple images
+            s3_key_value = submission.s3_key
+            if isinstance(s3_key_value, list):
+                s3_key_value = json.dumps(s3_key_value)
+            
             data = {
                 'phone_number': submission.phone_number,
-                'image_url': submission.image_url,
-                's3_key': submission.s3_key,  # Store S3 object key
+                'image_url': image_url_value,
+                's3_key': s3_key_value,
                 'prediction_result': submission.prediction_result,
                 'confidence_score': submission.confidence_score,
                 'scam_label': submission.scam_label,
                 'processing_time_ms': submission.processing_time_ms,
                 'input_text': submission.input_text
             }
-            
-            # Add optional fields for multiple images if provided
-            if submission.all_s3_keys is not None:
-                data['all_s3_keys'] = json.dumps(submission.all_s3_keys)
-            if submission.all_image_urls is not None:
-                data['all_image_urls'] = json.dumps(submission.all_image_urls)
             
             response = self.supabase.table('b2b_pilot_user_submissions').insert(data).execute()
             if response.data:

@@ -56,37 +56,53 @@ Modified the background-processor to support processing multiple images (up to 3
 **File**: `lambda-functions/background-processor/models.py`
 
 #### Changes to `UserSubmission` dataclass:
-- **Added new fields**:
-  - `all_s3_keys: Optional[List[str]]` - All S3 keys as JSON array
-  - `all_image_urls: Optional[List[str]]` - All image URLs as JSON array
+- **Modified existing fields** to support both single and multiple values:
+  - `image_url: Optional[Union[str, List[str]]]` - Single URL or list of URLs
+  - `s3_key: Optional[Union[str, List[str]]]` - Single S3 key or list of S3 keys
 
 #### Changes to `create_submission()`:
-- **JSON Serialization**: Converts list fields to JSON strings before storing
-- **Conditional Storage**: Only stores multi-image fields if more than one image
-- **Backward Compatibility**: Primary `image_url` and `s3_key` still store first image
+- **Smart Type Handling**: 
+  - Single image → stores as string (backward compatible)
+  - Multiple images → converts to JSON string for JSONB storage
+- **No new columns needed**: Uses existing `image_url` and `s3_key` columns
 
 #### Key Features:
 - Backward compatible with existing single-image submissions
-- Optional fields for multi-image support
+- No database schema changes required (only type conversion)
 - Handles None values gracefully
 
 ---
 
 ## Database Considerations
 
-### Required Database Changes (if not already present):
-You may need to add the following columns to the `b2b_pilot_user_submissions` table:
+### Required Database Changes:
+You need to modify the existing columns to support JSONB type:
 
 ```sql
+-- Convert existing TEXT columns to JSONB
+-- This allows storing both single strings and JSON arrays
 ALTER TABLE b2b_pilot_user_submissions 
-ADD COLUMN IF NOT EXISTS all_s3_keys JSONB,
-ADD COLUMN IF NOT EXISTS all_image_urls JSONB;
+ALTER COLUMN image_url TYPE JSONB USING 
+  CASE 
+    WHEN image_url IS NULL THEN NULL
+    WHEN image_url::text LIKE '[%' THEN image_url::jsonb
+    ELSE to_jsonb(image_url::text)
+  END;
+
+ALTER TABLE b2b_pilot_user_submissions 
+ALTER COLUMN s3_key TYPE JSONB USING 
+  CASE 
+    WHEN s3_key IS NULL THEN NULL
+    WHEN s3_key::text LIKE '[%' THEN s3_key::jsonb
+    ELSE to_jsonb(s3_key::text)
+  END;
 ```
 
 ### Backward Compatibility:
-- Existing single-image submissions continue to work
-- Primary fields (`image_url`, `s3_key`) always store the first image
-- Multi-image fields are only populated when multiple images are processed
+- **Single images**: Stored as JSON string (e.g., `"https://example.com/image.jpg"`)
+- **Multiple images**: Stored as JSON array (e.g., `["url1", "url2", "url3"]`)
+- Existing single-string values are automatically wrapped in JSON format
+- No new columns needed - uses existing schema
 
 ---
 
@@ -100,7 +116,8 @@ ADD COLUMN IF NOT EXISTS all_image_urls JSONB;
 - All images downloaded from Twilio
 - All uploaded to S3
 - All passed to OpenAI for analysis
-- First image in primary fields, all in JSON arrays
+- `image_url` stores JSON array: `["url1", "url2", "url3"]`
+- `s3_key` stores JSON array: `["key1", "key2", "key3"]`
 
 ### 3. Non-WhatsApp (webapp/mobile) with Single Image
 - Downloads from S3
@@ -109,7 +126,8 @@ ADD COLUMN IF NOT EXISTS all_image_urls JSONB;
 ### 4. Non-WhatsApp (webapp/mobile) with Multiple Images (2-3)
 - All images downloaded from S3
 - All passed to OpenAI for analysis
-- First image in primary fields, all in JSON arrays
+- `image_url` stores JSON array (or `null` if S3-only)
+- `s3_key` stores JSON array: `["key1", "key2", "key3"]`
 
 ### 5. Mixed Success Scenarios
 - If some images fail to download, processes available images
@@ -191,7 +209,9 @@ Enhanced logging at every step:
 ## Backward Compatibility
 
 ✅ **All changes are backward compatible**:
-- Single image submissions work exactly as before
+- Single image submissions store as JSON string (e.g., `"url"`)
+- Multiple images store as JSON array (e.g., `["url1", "url2"]`)
 - Existing API contracts unchanged
-- Database schema extended, not modified
+- Database columns converted to JSONB (supports both formats)
 - No breaking changes to existing functionality
+- Queries can handle both single strings and arrays

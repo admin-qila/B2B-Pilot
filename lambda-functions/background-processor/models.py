@@ -37,7 +37,6 @@ class UserSubmission:
     scam_label: Optional[str] = None
     processing_time_ms: Optional[int] = None
     created_at: Optional[datetime] = None
-    feedback_rating: Optional[int] = None
     feedback_text: Optional[str] = None
     feedback_timestamp: Optional[datetime] = None
     input_text: Optional[str] = None
@@ -63,7 +62,6 @@ class AnalyticsSummary:
     avg_confidence_score: Optional[float] = None
     avg_processing_time_ms: Optional[int] = None
     feedback_count: int = 0
-    avg_feedback_rating: Optional[float] = None
 
 class DatabaseManager:
     """Main database manager class"""
@@ -264,7 +262,7 @@ class DatabaseManager:
                 'input_text': submission.input_text
             }
             
-            response = self.supabase.table('user_submissions').insert(data).execute()
+            response = self.supabase.table('b2b_pilot_user_submissions').insert(data).execute()
             if response.data:
                 logger.info(f"Created submission for {submission.phone_number}")
                 return response.data[0]['id']
@@ -277,7 +275,7 @@ class DatabaseManager:
     def get_submission_by_id(self, submission_id: str) -> Optional[Dict]:
         """Get a submission by its ID"""
         try:
-            response = self.supabase.table('user_submissions')\
+            response = self.supabase.table('b2b_pilot_user_submissions')\
                 .select('*')\
                 .eq('id', submission_id)\
                 .execute()
@@ -293,10 +291,9 @@ class DatabaseManager:
     def get_latest_submission_without_feedback(self, phone_number: str) -> Optional[Dict]:
         """Get the latest submission for a phone number that doesn't have feedback yet"""
         try:
-            response = self.supabase.table('user_submissions')\
+            response = self.supabase.table('b2b_pilot_user_submissions')\
                 .select('*')\
                 .eq('phone_number', phone_number)\
-                .is_('feedback_rating', None)\
                 .order('created_at', desc=True)\
                 .limit(1)\
                 .execute()
@@ -313,12 +310,11 @@ class DatabaseManager:
         """Update submission with feedback"""
         try:
             data = {
-                'feedback_rating': rating,
                 'feedback_text': feedback_text,
                 'feedback_timestamp': datetime.utcnow().isoformat()
             }
             
-            self.supabase.table('user_submissions')\
+            self.supabase.table('b2b_pilot_user_submissions')\
                 .update(data)\
                 .eq('id', submission_id)\
                 .execute()
@@ -394,8 +390,7 @@ class DatabaseManager:
                     users_hit_limit=data['users_hit_limit'],
                     avg_confidence_score=data['avg_confidence_score'],
                     avg_processing_time_ms=data['avg_processing_time_ms'],
-                    feedback_count=data['feedback_count'],
-                    avg_feedback_rating=data['avg_feedback_rating']
+                    feedback_count=data['feedback_count']
                 )
                 summaries.append(summary)
             
@@ -448,7 +443,7 @@ class DatabaseManager:
     def get_recent_submissions(self, phone_number: str, limit: int = 10) -> List[Dict]:
         """Get recent submissions for a user"""
         try:
-            response = self.supabase.table('user_submissions')\
+            response = self.supabase.table('b2b_pilot_user_submissions')\
                 .select('*')\
                 .eq('phone_number', phone_number)\
                 .order('created_at', desc=True)\
@@ -465,7 +460,7 @@ class DatabaseManager:
         """Get comprehensive stats for a user"""
         try:
             # Get submission stats
-            submissions = self.supabase.table('user_submissions')\
+            submissions = self.supabase.table('b2b_pilot_user_submissions')\
                 .select('*')\
                 .eq('phone_number', phone_number)\
                 .execute()

@@ -201,6 +201,23 @@ Resources:
             Method: options
             RestApiId: !Ref WebhookApi
 
+  # Stale Message Processor Lambda
+  # Processes WhatsApp message groups that didn't reach aggregation thresholds
+  StaleMessageProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "b2b-pilot-stale-message-processor-${Environment}"
+      CodeUri: stale-message-processor/
+      Handler: handler.lambda_handler
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref MessageQueue
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt MessageQueue.QueueName
+
   # CloudWatch Alarms
   QueueDepthAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -250,6 +267,22 @@ Resources:
         - Name: FunctionName
           Value: !Ref ProcessorFunction
 
+  StaleProcessorErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-stale-processor-errors-${Environment}"
+      AlarmDescription: Alert when stale message processor Lambda errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref StaleMessageProcessorFunction
+
 Outputs:
   WebhookUrl:
     Description: Twilio webhook URL
@@ -263,3 +296,6 @@ Outputs:
   PresignedUrlEndpoint:
     Description: Presigned URL API endpoint
     Value: !Sub "https://${WebhookApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/presigned_url"
+  StaleMessageProcessorFunction:
+    Description: Stale Message Processor Lambda Function ARN
+    Value: !GetAtt StaleMessageProcessorFunction.Arn

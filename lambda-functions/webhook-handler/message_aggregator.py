@@ -63,29 +63,50 @@ class MessageAggregator:
                 - aggregated_message: Combined message dict (if ready to process)
                 - group_key: The aggregation group key
         """
+        group_key = None
         try:
             # Create group key: phone_number + timestamp window (5 seconds)
-            # Messages within 5 seconds from same number are grouped
             current_time = int(time.time())
-            time_window = 5  # seconds
+            time_window = 5
             group_timestamp = current_time - (current_time % time_window)
             group_key = f"{unified_message.phone_number}#{group_timestamp}"
-            
-            # Check if group already exists
-            response = self.supabase.table('whatsapp_message_groups')\
-                .select('*')\
-                .eq('group_key', group_key)\
-                .execute()
-            
-            if response.data and len(response.data) > 0:
-                # Group exists, add our message to it
+
+            # Try to insert a new group first (most common case)
+            self.supabase.table('whatsapp_message_groups').insert({
+                'group_key': group_key,
+                'phone_number': unified_message.phone_number,
+                'messages': json.dumps([unified_message.to_dict()]),
+                'message_count': 1,
+                'created_at': datetime.utcnow().isoformat(),
+                'last_updated_at': datetime.utcnow().isoformat()
+            }).execute()
+
+            logger.info(f"Created new message group {group_key}")
+            # Don't process immediately, wait for more messages
+            return False, None, group_key
+
+        except Exception as e:
+            # If the insert fails due to a duplicate key, the group already exists.
+            # This is expected when multiple messages arrive for the same group.
+            if 'duplicate key value' in str(e):
+                logger.info(f"Group {group_key} already exists, adding message.")
+                
+                # Retrieve the existing group
+                response = self.supabase.table('whatsapp_message_groups')\
+                    .select('*')\
+                    .eq('group_key', group_key)\
+                    .execute()
+
+                if not response.data:
+                    logger.error(f"Race condition: Group {group_key} not found after duplicate key error.")
+                    # Process immediately to avoid data loss
+                    return True, unified_message.to_dict(), None
+
                 item = response.data[0]
                 messages = json.loads(item['messages'])
-                
-                # Add current message
                 messages.append(unified_message.to_dict())
-                
-                # Update Supabase
+
+                # Update the existing group with the new message
                 self.supabase.table('whatsapp_message_groups')\
                     .update({
                         'messages': json.dumps(messages),
@@ -94,56 +115,37 @@ class MessageAggregator:
                     })\
                     .eq('group_key', group_key)\
                     .execute()
-                
-                logger.info(f"Added message to existing group {group_key}. Total: {len(messages)}")
-                
-                # Check if we should process now
-                # Process if: 
-                # 1. We have 3 messages (max), OR
-                # 2. More than 3 seconds have passed since first message
+
+                logger.info(f"Added message to group {group_key}. Total: {len(messages)}")
+
+                # Check if the group is ready for processing
                 first_message_time = datetime.fromisoformat(item['created_at'].replace('Z', '+00:00'))
                 time_elapsed = (datetime.utcnow() - first_message_time.replace(tzinfo=None)).total_seconds()
                 
-                should_process = len(messages) >= 3 or time_elapsed > 3
-                
-                if should_process:
-                    # Delete the group and return aggregated message
+                # Process if we have 3+ messages or if 3+ seconds have passed
+                if len(messages) >= 3 or time_elapsed > 3:
                     self.supabase.table('whatsapp_message_groups')\
                         .delete()\
                         .eq('group_key', group_key)\
                         .execute()
                     
-                    aggregated = self._merge_messages(messages)
-                    logger.info(f"Processing aggregated message with {len(messages)} items")
-                    return True, aggregated, group_key
+                    aggregated_message = self._merge_messages(messages)
+                    logger.info(f"Processing group {group_key} with {len(messages)} messages.")
+                    return True, aggregated_message, group_key
                 else:
-                    # Wait for more messages
+                    # Not ready yet, wait for more messages
                     logger.info(f"Waiting for more messages in group {group_key}")
                     return False, None, group_key
             
             else:
-                # First message in group, create new entry
-                messages = [unified_message.to_dict()]
-                
-                self.supabase.table('whatsapp_message_groups').insert({
-                    'group_key': group_key,
-                    'phone_number': unified_message.phone_number,
-                    'messages': json.dumps(messages),
-                    'message_count': 1,
-                    'created_at': datetime.utcnow().isoformat(),
-                    'last_updated_at': datetime.utcnow().isoformat()
-                }).execute()
-                
-                logger.info(f"Created new message group {group_key}")
-                
-                # Don't process immediately - wait for potential siblings
-                return False, None, group_key
-        
-        except Exception as e:
-            logger.error(f"Error in message aggregation: {e}")
-            # On error, process message immediately to avoid data loss
-            return True, unified_message.to_dict(), None
-    
+                # Handle other unexpected errors
+                logger.error(f"Error in message aggregation for group {group_key}: {e}")
+                # On error, process message immediately to avoid data loss
+                return True, unified_message.to_dict(), group_key
+
+
+
+
     def _merge_messages(self, messages: List[Dict]) -> Dict:
         """
         Merge multiple messages into a single unified message

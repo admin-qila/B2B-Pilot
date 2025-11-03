@@ -65,9 +65,9 @@ class MessageAggregator:
         """
         group_key = None
         try:
-            # Create group key: phone_number + timestamp window (5 seconds)
+            # Create group key: phone_number + timestamp window (10 seconds)
             current_time = int(time.time())
-            time_window = 5
+            time_window = 10
             group_timestamp = current_time - (current_time % time_window)
             group_key = f"{unified_message.phone_number}#{group_timestamp}"
 

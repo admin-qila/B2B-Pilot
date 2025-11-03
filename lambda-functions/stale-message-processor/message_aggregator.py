@@ -64,10 +64,10 @@ class MessageAggregator:
                 - group_key: The aggregation group key
         """
         try:
-            # Create group key: phone_number + timestamp window (5 seconds)
-            # Messages within 5 seconds from same number are grouped
+            # Create group key: phone_number + timestamp window (10 seconds)
+            # Messages within 10 seconds from same number are grouped
             current_time = int(time.time())
-            time_window = 5  # seconds
+            time_window = 10  # seconds
             group_timestamp = current_time - (current_time % time_window)
             group_key = f"{unified_message.phone_number}#{group_timestamp}"
             
@@ -177,7 +177,7 @@ class MessageAggregator:
         
         return merged
     
-    def process_stale_messages(self, max_age_seconds: int = 5) -> List[Dict]:
+    def process_stale_messages(self, max_age_seconds: int = 10) -> List[Dict]:
         """
         Process any messages that have been waiting too long
         This should be called by a scheduled job (e.g., CloudWatch Events or Supabase cron)

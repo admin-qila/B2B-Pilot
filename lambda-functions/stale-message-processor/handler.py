@@ -41,8 +41,8 @@ def lambda_handler(event, context):
         # Get aggregator instance
         aggregator = get_aggregator()
         
-        # Process messages older than 5 seconds
-        stale_messages = aggregator.process_stale_messages(max_age_seconds=5)
+        # Process messages older than 10 seconds
+        stale_messages = aggregator.process_stale_messages(max_age_seconds=10)
         
         if not stale_messages:
             logger.info("No stale messages to process")

@@ -217,6 +217,14 @@ Resources:
       Policies:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt MessageQueue.QueueName
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Name: !Sub "stale-message-processor-schedule-${Environment}"
+            Description: "Run the stale message processor every minute"
+            Schedule: rate(1 minute)
+            Enabled: true
 
   # CloudWatch Alarms
   QueueDepthAlarm:

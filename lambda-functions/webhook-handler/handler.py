@@ -22,6 +22,7 @@ try:
     from message_parser import MessageParser
     from validation_factory import ValidationFactory
     from response_factory import ResponseFactory
+    from message_aggregator import get_aggregator
 except ImportError as e:
     print(f"Import error: {e}")
     # Fallback to environment variables if config module not found
@@ -94,10 +95,56 @@ def lambda_handler(event, context):
         
         logger.info(f"Processing message from {unified_message.phone_number} with {len(unified_message.media_items)} media items")
 
+        # Check if message should be aggregated (WhatsApp with media)
+        try:
+            aggregator = get_aggregator()
+            
+            if aggregator.should_aggregate(unified_message):
+                # Aggregate WhatsApp media messages
+                should_process, aggregated_message, group_key, should_send_message = aggregator.aggregate_message(unified_message)
+                
+                if not should_process:
+                    # Message is waiting for siblings, return success but don't process yet
+                    logger.info(f"Message added to group {group_key}, waiting for more messages")
+                    if should_send_message:
+                        # First message in group - send acknowledgment
+                        return ResponseFactory.create_success_response(
+                            client_type,
+                            message=None,
+                            button_text=unified_message.button_text
+                        )
+                    else:
+                        # Duplicate message - return empty 200 response without any message
+                        return {
+                            'statusCode': 200,
+                            'body': ''
+                        }
+                
+                # We have aggregated message ready to process
+                logger.info(f"Processing aggregated message from group {group_key}")
+                message_to_send = aggregated_message
+                is_aggregated_final_message = True
+            else:
+                # Not aggregating (non-WhatsApp or text-only), process immediately
+                message_to_send = unified_message.to_dict()
+                is_aggregated_final_message = False
+        
+        except Exception as e:
+            logger.error(f"Error in message aggregation: {e}, processing immediately")
+            message_to_send = unified_message.to_dict()
+            is_aggregated_final_message = False
+
         # Send to SQS
         try:
-            # Create SQS message from unified message
-            sqs_message_data = MessageParser.create_sqs_message(unified_message)
+            # Create SQS message from unified message (or aggregated message)
+            if isinstance(message_to_send, dict):
+                # Convert aggregated dict back to UnifiedMessage
+                from message_parser import UnifiedMessage
+                message_obj = UnifiedMessage.from_dict(message_to_send)
+            else:
+                message_obj = unified_message
+            
+            sqs_message_data = MessageParser.create_sqs_message(message_obj)
             
             response = sqs.send_message(
                 QueueUrl=SQS_QUEUE_URL,
@@ -106,6 +153,15 @@ def lambda_handler(event, context):
             )
             
             logger.info(f"Message queued successfully. SQS MessageId: {response['MessageId']}")
+            
+            # If this is the final message in an aggregated group, return empty response
+            # (the acknowledgment was already sent with the first message)
+            if is_aggregated_final_message:
+                logger.info("Returning empty response for aggregated final message")
+                return {
+                    'statusCode': 200,
+                    'body': ''
+                }
             
             # Return appropriate response based on client type
             success_message = "Your request is being processed" if client_type != ClientType.WHATSAPP else None

@@ -101,27 +101,38 @@ def lambda_handler(event, context):
             
             if aggregator.should_aggregate(unified_message):
                 # Aggregate WhatsApp media messages
-                should_process, aggregated_message, group_key = aggregator.aggregate_message(unified_message)
+                should_process, aggregated_message, group_key, should_send_message = aggregator.aggregate_message(unified_message)
                 
                 if not should_process:
                     # Message is waiting for siblings, return success but don't process yet
                     logger.info(f"Message added to group {group_key}, waiting for more messages")
-                    return ResponseFactory.create_success_response(
-                        client_type,
-                        message=None,
-                        button_text=unified_message.button_text
-                    )
+                    if should_send_message:
+                        # First message in group - send acknowledgment
+                        return ResponseFactory.create_success_response(
+                            client_type,
+                            message=None,
+                            button_text=unified_message.button_text
+                        )
+                    else:
+                        # Duplicate message - return empty 200 response without any message
+                        return {
+                            'statusCode': 200,
+                            'body': ''
+                        }
                 
                 # We have aggregated message ready to process
                 logger.info(f"Processing aggregated message from group {group_key}")
                 message_to_send = aggregated_message
+                is_aggregated_final_message = True
             else:
                 # Not aggregating (non-WhatsApp or text-only), process immediately
                 message_to_send = unified_message.to_dict()
+                is_aggregated_final_message = False
         
         except Exception as e:
             logger.error(f"Error in message aggregation: {e}, processing immediately")
             message_to_send = unified_message.to_dict()
+            is_aggregated_final_message = False
 
         # Send to SQS
         try:
@@ -142,6 +153,15 @@ def lambda_handler(event, context):
             )
             
             logger.info(f"Message queued successfully. SQS MessageId: {response['MessageId']}")
+            
+            # If this is the final message in an aggregated group, return empty response
+            # (the acknowledgment was already sent with the first message)
+            if is_aggregated_final_message:
+                logger.info("Returning empty response for aggregated final message")
+                return {
+                    'statusCode': 200,
+                    'body': ''
+                }
             
             # Return appropriate response based on client type
             success_message = "Your request is being processed" if client_type != ClientType.WHATSAPP else None

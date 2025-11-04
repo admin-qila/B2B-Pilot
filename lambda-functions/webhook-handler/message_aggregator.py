@@ -53,7 +53,7 @@ class MessageAggregator:
         
         return is_whatsapp and has_media
     
-    def aggregate_message(self, unified_message) -> Tuple[bool, Optional[dict], Optional[str]]:
+    def aggregate_message(self, unified_message) -> Tuple[bool, Optional[dict], Optional[str], bool]:
         """
         Aggregate a WhatsApp message with potential siblings
         
@@ -83,7 +83,7 @@ class MessageAggregator:
 
             logger.info(f"Created new message group {group_key}")
             # Don't process immediately, wait for more messages
-            return False, None, group_key
+            return False, None, group_key, True
 
         except Exception as e:
             # If the insert fails due to a duplicate key, the group already exists.
@@ -100,7 +100,7 @@ class MessageAggregator:
                 if not response.data:
                     logger.error(f"Race condition: Group {group_key} not found after duplicate key error.")
                     # Process immediately to avoid data loss
-                    return True, unified_message.to_dict(), None
+                    return True, unified_message.to_dict(), None, False
 
                 item = response.data[0]
                 messages = json.loads(item['messages'])
@@ -131,17 +131,17 @@ class MessageAggregator:
                     
                     aggregated_message = self._merge_messages(messages)
                     logger.info(f"Processing group {group_key} with {len(messages)} messages.")
-                    return True, aggregated_message, group_key
+                    return True, aggregated_message, group_key, False
                 else:
                     # Not ready yet, wait for more messages
                     logger.info(f"Waiting for more messages in group {group_key}")
-                    return False, None, group_key
+                    return False, None, group_key, False
             
             else:
                 # Handle other unexpected errors
                 logger.error(f"Error in message aggregation for group {group_key}: {e}")
                 # On error, process message immediately to avoid data loss
-                return True, unified_message.to_dict(), group_key
+                return True, unified_message.to_dict(), group_key, False
 
 
 

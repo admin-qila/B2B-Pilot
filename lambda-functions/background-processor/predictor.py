@@ -7,9 +7,11 @@ import io
 import json
 import logging
 import os
+from distutils.command.config import config
 from typing import Any, Dict, Union
 from typing import List
-
+import datetime
+import csv
 from google import genai
 from google.genai import types
 
@@ -24,58 +26,36 @@ GEMINI_API_KEY = os.getenv('AI_API_KEY')
 MODEL_NAME = "gemini-2.5-flash"
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+image_cache = {}
 
+def get_latest_gemini_files(allowed_names_file='cache_static_list.csv'):
+    # load allowed names
+    if allowed_names_file.endswith(".csv"):
+        with open(allowed_names_file, newline='') as f:
+            reader = csv.DictReader(f)
+            allowed = {row["display_name"].strip() for row in reader if row["display_name"].strip()}
+    else:
+        with open(allowed_names_file, "r") as f:
+            allowed = {line.strip() for line in f if line.strip()}
 
-class GeminiImageCache:
-    def __init__(self, cache_file: str = "gemini_image_cache.json"):
-        self.cache_file = cache_file
-        self.cache = self._load_cache()
+    files = client.files.list()
+    latest = {}
+    one_week_ago = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(weeks=1)
 
-    def _load_cache(self):
-        if os.path.exists(self.cache_file):
-            with open(self.cache_file, "r") as f:
-                return json.load(f)
-        return {}
+    for f in files:
+        if f.display_name not in allowed:
+            continue  # skip anything not in your static list
 
-    def _save_cache(self):
-        with open(self.cache_file, "w") as f:
-            json.dump(self.cache, f, indent=2)
+        create_time = getattr(f, "create_time", None)
+        if not create_time:
+            create_time = one_week_ago
+        elif isinstance(create_time, str):
+            create_time = datetime.datetime.fromisoformat(create_time.replace("Z", "+00:00"))
 
-    def get(self, image_path: str):
-        """
-        Returns a valid Gemini File reference for an image.
-        Uses cached reference if valid, otherwise uploads and updates cache.
-        """
-        if image_path in self.cache:
-            file_name = self.cache[image_path]
-            try:
-                existing = client.files.get(name=file_name)
-                logger.info(f"✅ Cached file valid: {file_name}")
-                return existing
-            except Exception:
-                logger.info(f"⚠️ Cached reference invalid for {image_path}. Re-uploading...")
+        if f.display_name not in latest or create_time > latest[f.display_name]["time"]:
+            latest[f.display_name] = {"name": f.name, "time": create_time}
 
-        return self._upload(image_path)
-
-    def _upload(self, image_path: str):
-        logger.info(f"⬆️ Uploading {image_path} to Gemini...")
-        uploaded = client.files.upload(file=image_path)
-        self.cache[image_path] = uploaded.name
-        self._save_cache()
-        logger.info(f"✅ Uploaded {image_path} → {uploaded.name}")
-        return uploaded
-
-    def clear(self):
-        """Clears all cached entries (use carefully)."""
-        self.cache = {}
-        if os.path.exists(self.cache_file):
-            os.remove(self.cache_file)
-        logger.info("🧹 Cache cleared.")
-
-    def list_cached(self):
-        """Returns current cache mapping."""
-        return self.cache
-
+    return {k: v["name"] for k, v in latest.items()}
 
 
 def upload_file_from_base64(base64_image_string_list, mime_type='image/jpeg'):
@@ -127,22 +107,39 @@ def compare_user_images(
     user_files: List,
     user_prompt: str,
     system_prompt_ref: str,
-    response_structure:dict,
+    response_structure: dict,
     reference_images: List[str],
     reference_image_context: List[str],
     model_name: str = "gemini-2.5-flash"
-) :
+):
     """
-    Compare fixed reference images (cached) against user‑uploaded images (real‑time).
-    Enforce deterministic/model settings for production.
+    Compare fixed reference images (cached remotely on Gemini) against user-uploaded images.
+    Uses latest_files dict (display_name → file.name).
+    Uploads missing files, and re-uploads invalid references automatically.
     """
+    global image_cache
+    ref_files = []
+    for img_path, context in zip(reference_images, reference_image_context):
 
-    # 1. Load cached reference images via image_cache
-    try:
-        ref_files = [[context, image_cache.get(img)] for context, img in zip (reference_image_context,reference_images)]
-    except Exception as e:
-        logger.error("Failed to fetch or upload cached reference images: %s", e)
-        raise
+        # CASE 1: already in dict → validate
+        if img_path in image_cache:
+            file_name = image_cache[img_path]
+            try:
+                existing = client.files.get(name=file_name)
+                logger.info(f"✅ Using cached Gemini file: {img_path} → {file_name}")
+                ref_files.append([context, existing])
+                continue
+            except Exception:
+                logger.info(f"⚠️ Cached reference invalid for {img_path}. Re-uploading...")
+
+        # CASE 2: not in dict or invalid → upload
+        logger.info(f"⬆️ Uploading {img_path} to Gemini...")
+        uploaded = client.files.upload(
+            file=img_path,
+            config={"display_name": img_path, "mimeType": "image/jpeg"})
+        image_cache[img_path] = uploaded.name
+        logger.info(f"✅ Uploaded {img_path} → {uploaded.name}")
+        ref_files.append([context, uploaded])
 
 
     # 2. Build input prompt parts
@@ -181,11 +178,10 @@ def compare_user_images(
 
 
 def product_classification(img,
-                           reference_images = ("RR_FSE/RR-SuperGreen/SuperexGreenBoxTemplate.jpg", "RR_FSE/RR-Q1/Q1Box.jpg"),
+                           reference_images = ("RR_FSE/RR-SuperGreen/SuperexGreenBoxTemplate.jpg", "RR_FSE/RR-Q1/Q1BoxTemplate.jpg"),
                            reference_image_context = ('RR Kabel SUPEREX GREEN', 'RR Kabel Q1', "Other", "None"),
                            system_prompt_name ="RR_product_classification_system_prompt_v3",
                            user_prompt = "The Reference images shows 2 products. Is the user image showing the same brand, product line and packaging design of either 1? The user is allowed to upload box or reciepts of either of the product",
-                           MODEL_NAME = "gemini-2.5-flash"
                            ):
 
 
@@ -307,7 +303,7 @@ def product_barcode_extraction(img: List):
     return result.text
 
 
-def product_receipt_extraction(img: list, product: str):
+def product_receipt_extraction(img: list):
     prompt = f"Extract meta data that is readable from the receipt which include name of the shop name(name of store if available) and location(city of store if available). Keep all reasoning factual and visual, do not include internal thoughts."
     return_structure = {
         "type": "OBJECT",
@@ -316,7 +312,6 @@ def product_receipt_extraction(img: list, product: str):
             "location": {"type": "STRING", "nullable": True}
         }
     }
-
     result = extract_user_images_info(user_files=img, user_prompt=prompt, response_structure=return_structure)
     return result.text
 
@@ -368,6 +363,7 @@ def _process_with_analysis(
 ) -> Dict[str, Any]:
     """Unified processing logic for both text and image inputs."""
     logger.info(f"Processing {input_type} input")
+    global image_cache
     result["input_type"] = input_type
     
     # Log number of images if processing multiple
@@ -388,6 +384,7 @@ def _process_with_analysis(
                    "barcodes": [],
                    "receipt": {"shop_name": None, "location": None}
                    }
+    image_cache = get_latest_gemini_files()
     user_files = upload_file_from_base64(input_data)
     for img in user_files:
         result = product_classification(img)
@@ -463,7 +460,7 @@ def _process_with_analysis(
 
     # Extract Receipt
     if len(receipt_images) > 0:
-        receipt = product_receipt_extraction(receipt_images, product[0])
+        receipt = product_receipt_extraction(receipt_images)
         receipt = json.loads(receipt)
         print(receipt)
         return_dict["receipt"] = receipt
@@ -488,6 +485,3 @@ def _process_unsupported_input(result: Dict[str, Any]) -> Dict[str, Any]:
 
     
     return  unsupported_result
-
-
-image_cache = GeminiImageCache()

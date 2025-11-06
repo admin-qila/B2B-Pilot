@@ -1,8 +1,0 @@
-Starting LocalStack...
- Network lambda-functions_default  Creating
- Network lambda-functions_default  Created
- Container localstack  Creating
- Container localstack  Created
- Container localstack  Starting
- Container localstack  Started
-Waiting for LocalStack services to be ready...

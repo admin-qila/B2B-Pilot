@@ -7,10 +7,14 @@ echo ""
 
 # Get stack outputs
 echo "📋 Stack Outputs:"
-WEBHOOK_URL=$(awslocal cloudformation describe-stacks --stack-name b2b-pilot-local --query 'Stacks[0].Outputs[?OutputKey==`WebhookUrl`].OutputValue' --output text)
-PRESIGNED_URL=$(awslocal cloudformation describe-stacks --stack-name b2b-pilot-local --query 'Stacks[0].Outputs[?OutputKey==`PresignedUrlEndpoint`].OutputValue' --output text)
+API_ID=$(awslocal apigateway get-rest-apis --query 'items[0].id' --output text)
 QUEUE_URL=$(awslocal cloudformation describe-stacks --stack-name b2b-pilot-local --query 'Stacks[0].Outputs[?OutputKey==`QueueUrl`].OutputValue' --output text)
 
+# Construct LocalStack URLs
+WEBHOOK_URL="http://localhost:4566/restapis/${API_ID}/staging/_user_request_/authenticity_check"
+PRESIGNED_URL="http://localhost:4566/restapis/${API_ID}/staging/_user_request_/presigned_url"
+
+echo "  API Gateway ID: $API_ID"
 echo "  Webhook URL: $WEBHOOK_URL"
 echo "  Presigned URL Endpoint: $PRESIGNED_URL"
 echo "  Queue URL: $QUEUE_URL"

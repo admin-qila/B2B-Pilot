@@ -6,7 +6,7 @@ services:
       - "4566:4566"          # LocalStack edge port
       - "4571:4571"
     environment:
-      - SERVICES=lambda,sqs,apigateway,s3,cloudwatch,events,cloudformation,iam,sts
+      - SERVICES=lambda,sqs,apigateway,s3,cloudwatch,events,cloudformation,iam,sts,logs
       - DEBUG=1
       - DATA_DIR=/var/lib/localstack/data
       - LAMBDA_EXECUTOR=docker-reuse

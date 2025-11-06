@@ -1,20 +1,17 @@
-from openai import OpenAI
-import os
 import base64
+import io
 # import cv2
 # import numpy as np
 # import torch
-import requests
-from urllib.parse import urlparse
-import whois
 # import pytesseract
 import json
-import re
-from langchain.agents import Tool
-from typing import Any, Dict, Union, List
 import logging
-from io import BytesIO
-from PIL import Image
+import os
+from typing import Any, Dict, Union
+from typing import List
+
+from google import genai
+from google.genai import types
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,78 +20,329 @@ logger = logging.getLogger(__name__)
 # Hyperparams
 IMG_SIZE = 299
 # DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-openai_key = os.environ.get("AI_API_KEY")
-VT_API_KEY = os.environ.get('VIRUSTOTAL_API_KEY')
-GSB_API_KEY = os.environ.get('GOOGLE_SAFE_BROWSING_KEY')
+GEMINI_API_KEY = os.getenv('AI_API_KEY')
+MODEL_NAME = "gemini-2.5-flash"
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+class GeminiImageCache:
+    def __init__(self, cache_file: str = "gemini_image_cache.json"):
+        self.cache_file = cache_file
+        self.cache = self._load_cache()
+
+    def _load_cache(self):
+        if os.path.exists(self.cache_file):
+            with open(self.cache_file, "r") as f:
+                return json.load(f)
+        return {}
+
+    def _save_cache(self):
+        with open(self.cache_file, "w") as f:
+            json.dump(self.cache, f, indent=2)
+
+    def get(self, image_path: str):
+        """
+        Returns a valid Gemini File reference for an image.
+        Uses cached reference if valid, otherwise uploads and updates cache.
+        """
+        if image_path in self.cache:
+            file_name = self.cache[image_path]
+            try:
+                existing = client.files.get(name=file_name)
+                logger.info(f"✅ Cached file valid: {file_name}")
+                return existing
+            except Exception:
+                logger.info(f"⚠️ Cached reference invalid for {image_path}. Re-uploading...")
+
+        return self._upload(image_path)
+
+    def _upload(self, image_path: str):
+        logger.info(f"⬆️ Uploading {image_path} to Gemini...")
+        uploaded = client.files.upload(file=image_path)
+        self.cache[image_path] = uploaded.name
+        self._save_cache()
+        logger.info(f"✅ Uploaded {image_path} → {uploaded.name}")
+        return uploaded
+
+    def clear(self):
+        """Clears all cached entries (use carefully)."""
+        self.cache = {}
+        if os.path.exists(self.cache_file):
+            os.remove(self.cache_file)
+        logger.info("🧹 Cache cleared.")
+
+    def list_cached(self):
+        """Returns current cache mapping."""
+        return self.cache
 
 
 
-def is_base64_image(data: str) -> bool:
-    """Check if input string looks like valid base64-encoded image data."""
+def upload_file_from_base64(base64_image_string_list, mime_type='image/jpeg'):
+    """
+    Decodes a base64 string and uploads it to the Gemini API for processing.
+    """
+    user_files = []
     try:
-        # Strip possible data URI prefix
-        if data.startswith("data:image"):
-            header, data = data.split(",", 1)
+        for base64_image_string in base64_image_string_list:
+            # Decode the base64 string into raw binary data
+            image_bytes = base64.b64decode(base64_image_string)
 
-        decoded = base64.b64decode(data, validate=True)
+            # Wrap the binary data in a file-like object
+            image_file_object = io.BytesIO(image_bytes)
 
-        # Reject tiny payloads (too small to be an image)
-        if len(decoded) < 10:
-            return False
+            uploaded_file = client.files.upload(
+                file=image_file_object,
+                config={'display_name': "api_uploaded_image", "mimeType": mime_type}
+            )
 
-        # Try opening with Pillow
-        with Image.open(BytesIO(decoded)) as img:
-            img.verify()  # verify image integrity
+            logger.info(f"Successfully uploaded file: {uploaded_file.name}")
+            user_files.append(uploaded_file)
+
+    except Exception as e:
+        logger.error(f"An error occurred while decoding image in upload_file_from_base64(): {e}")
+    return user_files
+
+def delete_file(user_files):
+    for f in user_files:
+        try:
+            client.files.delete(name=f.name)
+        except Exception:
+            logger.warning("Failed cleanup for %s", f.name)
+    return
+
+
+def load_prompts(name: str, prompt_file="prompts.json"):
+    if not os.path.exists(prompt_file):
+        raise FileNotFoundError(f"Prompt file not found: {prompt_file}")
+    with open(prompt_file, "r") as f:
+        prompts = json.load(f)
+    if name not in prompts:
+        raise KeyError(f"Prompt '{name}' not found in {prompt_file}")
+    prompt_data = prompts[name]
+    return prompt_data["content"]
+
+
+def compare_user_images(
+    user_files: List,
+    user_prompt: str,
+    system_prompt_ref: str,
+    response_structure:dict,
+    reference_images: List[str],
+    reference_image_context: List[str],
+    model_name: str = "gemini-2.5-flash"
+) :
+    """
+    Compare fixed reference images (cached) against user‑uploaded images (real‑time).
+    Enforce deterministic/model settings for production.
+    """
+
+    # 1. Load cached reference images via image_cache
+    try:
+        ref_files = [[context, image_cache.get(img)] for context, img in zip (reference_image_context,reference_images)]
+    except Exception as e:
+        logger.error("Failed to fetch or upload cached reference images: %s", e)
+        raise
+
+
+    # 2. Build input prompt parts
+    parts = [
+        "Reference images:",
+        *ref_files,
+        "User images:",
+        *user_files,
+        user_prompt
+    ]
+
+    # 3. Generate content with deterministic config
+    try:
+        response = client.models.generate_content(
+            model = model_name,
+            contents=parts,
+            config=types.GenerateContentConfig(
+                temperature=0.0,
+                top_k=1,
+                top_p=1.0,
+                system_instruction = system_prompt_ref,
+                response_mime_type="application/json",
+                response_schema=response_structure
+            )
+        )
+        logger.info("Model generation successful")
+        return response
+    except Exception as e:
+        logger.error("Model generation failed: %s", e)
+        for f in user_files:
+            try:
+                client.files.delete(name=f.name)
+            except Exception:
+                logger.warning("Failed cleanup for %s", f.name)
+        raise
+
+
+def product_classification(img,
+                           reference_images = ("RR_FSE/RR-SuperGreen/SuperexGreenBoxTemplate.jpg", "RR_FSE/RR-Q1/Q1Box.jpg"),
+                           reference_image_context = ('RR Kabel SUPEREX GREEN', 'RR Kabel Q1', "Other", "None"),
+                           system_prompt_name ="RR_product_classification_system_prompt_v3",
+                           user_prompt = "The Reference images shows 2 products. Is the user image showing the same brand, product line and packaging design of either 1? The user is allowed to upload box or reciepts of either of the product",
+                           MODEL_NAME = "gemini-2.5-flash"
+                           ):
+
+
+    response_structure = {
+        "type": "OBJECT",
+        "properties":    {
+              "is_product_match": {"type": "BOOLEAN", "nullable": True},
+              "multiple_products": {"type": "BOOLEAN", "nullable": False},
+              "partial_or_occluded": {"type": "BOOLEAN", "nullable": False},
+              "blurry_or_unclear": {"type": "BOOLEAN", "nullable": False},
+              "product":{"type": "STRING", "enum": ["RR Kabel SUPEREX GREEN", "RR Kabel Q1", "None"]},
+              "reason": {"type": "STRING", "nullable": False},
+              "is_receipt_image" : {"type": "BOOLEAN", "nullable": False},
+              "barcode_present": {"type": "BOOLEAN", "nullable": False},
+            "request_new_image":{"type": "BOOLEAN", "nullable": False},
+            "request_new_image_reason":{"type": "STRING", "nullable": True},
+            }
+    }
+
+
+    #system prompt
+    system_prompt_ref = load_prompts(name= system_prompt_name)
+    result = compare_user_images(
+                user_files=[img],
+                user_prompt=user_prompt,
+                system_prompt_ref=system_prompt_ref,
+                response_structure=response_structure,
+                reference_images=reference_images,
+                reference_image_context=reference_image_context,
+                model_name=MODEL_NAME
+            )
+    return result.text
+
+
+def product_counterfeit_testing(img,
+                                reference_images,
+                                reference_image_context,
+                                system_prompt_name ="RR_counterfeit_detection_system_prompt_v3",
+                                user_prompt = "Check if the User images are of counterfeit products.",
+                                model_name ="gemini-2.5-flash"
+                                ):
+    response_structure = {
+        "type": "OBJECT",
+        "properties":    {
+              "is_counterfeit": {"type": "BOOLEAN", "nullable": True},
+              "confidence":{"type": "STRING", "enum": ["low", "medium", "high"]},
+              "summary": {"type": "STRING", "nullable": False},
+              "evidence": {"type": "ARRAY",
+                           "items": {
+                                "type": "OBJECT",
+                                "properties": {
+                                        "attribute": {"type": "STRING", "enum": ["logo","color","typography","barcode","seal","finish","dimensions","text","other"]},
+                                        "reference_value": {"type": "STRING", "nullable": False},
+                                        "image_value": {"type": "STRING", "nullable": False},
+                                        "discrepancy": {"type": "STRING", "enum": ["none", "minor", "major", "not_evaluable"]},
+                                        "notes":{"type": "STRING", "nullable": True},
+                                            }
+                                    }
+                            },
+              "detected_material_finish" : {"type": "STRING", "enum": ["matte","gloss","metallic","plastic","paper","unknown"]},
+              "request_new_image": {"type": "BOOLEAN", "nullable": False},
+              "request_new_image_reason":  {"type": "STRING", "nullable": False},
+              "recommended_action": {"type": "STRING", "nullable": False}
+                    }
+                }
+    #system prompt
+    system_prompt_ref = load_prompts(name= system_prompt_name)
+    result = compare_user_images(
+                user_files=img,
+                user_prompt=user_prompt,
+                system_prompt_ref=system_prompt_ref,
+                response_structure=response_structure,
+                reference_images=reference_images,
+                reference_image_context=reference_image_context,
+                model_name=model_name
+            )
+    return result.text
+
+
+def extract_user_images_info(
+    user_files: List,
+    user_prompt: str,
+    response_structure:dict,
+    model_name: str = "gemini-2.5-flash"
+):
+    parts = ["User images:",
+        *user_files,
+        user_prompt]
+    try:
+        response = client.models.generate_content(
+            model = model_name,
+            contents=parts,
+            config=types.GenerateContentConfig(
+                temperature=0.0,
+                top_k=1,
+                top_p=1.0,
+                response_mime_type="application/json",
+                response_schema=response_structure
+            )
+        )
+        logger.info("Model generation successful")
+        return response
+    except Exception as e:
+        logger.error("Model generation failed: %s", e)
+
+
+def product_barcode_extraction(img: List):
+    prompt = "Detect all the QR codes and barcodes from the images, output a JSON list of detected codes, each item including 'type', 'data'"
+    return_structure = {"type": "ARRAY",
+                           "items": {
+                                "type": "OBJECT",
+                                "properties": {
+                                        "type": {"type": "STRING", "nullable": True},
+                                        "data":{"type": "STRING", "nullable": True}
+                                            }
+                                    }
+                            }
+    result = extract_user_images_info(user_files=img,user_prompt=prompt,response_structure=return_structure)
+    return result.text
+
+
+def product_receipt_extraction(img: list, product: str):
+    prompt = f"Extract meta data that is readable from the receipt which include name of the shop name(name of store if available) and location(city of store if available). Keep all reasoning factual and visual, do not include internal thoughts."
+    return_structure = {
+        "type": "OBJECT",
+        "properties": {
+            "shop_name": {"type": "STRING", "nullable": True},
+            "location": {"type": "STRING", "nullable": True}
+        }
+    }
+
+    result = extract_user_images_info(user_files=img, user_prompt=prompt, response_structure=return_structure)
+    return result.text
+
+def is_valid_image_set(product: List[str], reciept_images: List[str]):
+    # Rules: 1. Max 1 product 2. Max 1 receipt image
+    if len(reciept_images)<=1:
+        if len(product)==1:
             return True
+    return False
 
-    except Exception:
-        return False
-
-def summarize_website_checks(url_checks: Dict[str, Any]) -> str:
-    """Summarize the results of website safety checks into a human-readable string."""
-    summaries = []
-    for url, checks in url_checks.items():
-        verdict = checks.get("Verdict", "UNKNOWN")
-        reasons = checks.get("Reason", [])
-        if verdict == "UNSAFE":
-            reason_str = "; ".join(reasons) if reasons else "Checks did not pass"
-            summaries.append(f"URL: {url} - Verdict: {verdict} ({reason_str})")
-        elif verdict == "UNKNOWN":
-            reason_str = "; ".join(reasons) if reasons else "Domain age unknown"
-            summaries.append(f"URL: {url} - Verdict: {verdict} ({reason_str})")
-        else:
-            reason_str = "No issues found"
-            summaries.append(f"URL: {url} - Verdict: {reason_str}")
-    return "\n".join(summaries)
 
 def predict_response(input_data: Union[str, bytes, List[str]]) -> Dict[str, Any]:
     """
-    Main entry point for scam detection.
-    
-    - Text input: Extract websites → Check URL safety → Analyze text
-    - Image input (single or list): Analyze image(s) (extracts websites) → Check URL safety → Re-analyze with safety data
+    Main entry point for counterfeit detection.
+    - Image input (single or list): Analyze image(s) for counterfeit indicators.
     """
     result = {"input_type": None, "steps": [], "final_output": None}
     
     # Check if it's a list of images
     if isinstance(input_data, list):
         return _process_image_input(input_data, result)
-    elif isinstance(input_data, str) and not is_base64_image(input_data):
-        return _process_text_input(input_data, result)
-    elif isinstance(input_data, str) and is_base64_image(input_data):
+    elif isinstance(input_data, str):
         return _process_image_input(input_data, result)
     else:
         return _process_unsupported_input(result)
 
-
-def _process_text_input(text_input: str, result: Dict[str, Any]) -> Dict[str, Any]:
-    """Process text input for scam detection."""
-    return _process_with_analysis(
-        input_data=text_input,
-        input_type="text",
-        analysis_tool="TextScamAnalysis",
-        result=result
-    )
 
 
 def _process_image_input(image_data: Union[str, List[str]], result: Dict[str, Any]) -> Dict[str, Any]:
@@ -109,7 +357,6 @@ def _process_image_input(image_data: Union[str, List[str]], result: Dict[str, An
     return _process_with_analysis(
         input_data=image_data,
         input_type="image",
-        analysis_tool="ImageScamAnalysis",
         result=result
     )
 
@@ -117,7 +364,6 @@ def _process_image_input(image_data: Union[str, List[str]], result: Dict[str, An
 def _process_with_analysis(
     input_data: Union[str, List[str]],
     input_type: str,
-    analysis_tool: str,
     result: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Unified processing logic for both text and image inputs."""
@@ -129,33 +375,103 @@ def _process_with_analysis(
         logger.info(f"Processing {len(input_data)} images")
     
     # Perform initial analysis
-    result["steps"].append(analysis_tool)
-    analysis_result = tool_map[analysis_tool](input_data)
-    logger.info(f"{input_type} analysis result: {analysis_result}")
-    
-    # Parse result and extract websites
-    final_result_json = parse_openai_text_output(analysis_result)
-    extracted_websites = final_result_json.get('extracted_websites', [])
-    
-    # Check website safety if websites were found
-    if extracted_websites:
-        logger.info(f"Extracted websites from {input_type}: {extracted_websites}")
-        result["steps"].append("URLSafetyChecker")
-        url_safety_check = tool_map["URLSafetyChecker"](extracted_websites)
-        logger.info(f"URL safety check: {url_safety_check}")
+    product = []
+    product_images = []
+    barcode_images = []
+    receipt_images = []
+    rejected_images = []
+    rejected_images_reason = ''
+    return_dict = {"sku": None,
+                   "analysis": None,
+                   "confidence": None,
+                   "summary": None,
+                   "barcodes": [],
+                   "receipt": {"shop_name": None, "location": None}
+                   }
+    user_files = upload_file_from_base64(input_data)
+    for img in user_files:
+        result = product_classification(img)
+        result = json.loads(result)
+        print(result)
+        if result["is_receipt_image"]:
+            if result['partial_or_occluded'] or result['blurry_or_unclear']:
+                rejected_images.append(img.name)
+                rejected_images_reason += str(len(rejected_images)) + ". " + result["reason"]
+                if result['request_new_image']:
+                    rejected_images_reason += result['request_new_image_reason']
+            else:
+                receipt_images.append(img)
+        elif result['multiple_products']:
+            rejected_images.append(img.name)
+            rejected_images_reason += str(len(rejected_images)) + ". " + result["reason"]
+            continue
+        elif result["is_product_match"]:
+            if result['partial_or_occluded'] or result['blurry_or_unclear']:
+                rejected_images.append(img.name)
+                rejected_images_reason += str(len(rejected_images)) + ". " + result["reason"]
+                if result['request_new_image']:
+                    rejected_images_reason += result['request_new_image_reason']
+            else:
+                product.append(result["product"])
+                product_images.append(img)
+                if result["barcode_present"]:
+                    barcode_images.append(img)
+            continue
+        else:
+            rejected_images.append(img.name)
+            rejected_images_reason += str(len(rejected_images)) + ". " + result["reason"]
+    if len(rejected_images) > 0:
+        rejected_images_text = f" Rejected Images: {len(rejected_images)} of {len(user_files)}. Reason : {rejected_images_reason}"
     else:
-        url_safety_check = f'No websites detected in {input_type}'
-        logger.info(f"No websites extracted from {input_type}")
-    
-    # Add website safety information to result
-    final_result_json['website_safety_checks'] = url_safety_check
-    final_result_json['website_safety_checks_summary'] = (
-        summarize_website_checks(url_safety_check) 
-        if isinstance(url_safety_check, dict) 
-        else url_safety_check
-    )
-    
-    return _finalize_result(result, final_result_json)
+        rejected_images_text = ""
+    if not is_valid_image_set(product, receipt_images):
+        return_dict["summary"] = f"Cannot Process, we can only process images of same product(SUPEREX GREEN or Q1) and maximum 1 receipt image." + rejected_images_text
+        return return_dict
+
+    # Product Images Send to check authentic
+    if product[0] == "RR Kabel SUPEREX GREEN":
+        reference_images = ['RR_FSE/RR-SuperGreen/SuperexGreenBoxTemplate.jpg',
+                            'RR_FSE/RR-SuperGreen/SuperexGreenBoxBack0.jpg',
+                            'RR_FSE/RR-SuperGreen/SuperexGreenBoxFront1.jpg']
+        reference_image_context = ['box template', 'back of the the box', 'front of the box']
+        result = product_counterfeit_testing(product_images,
+                                             reference_images,
+                                             reference_image_context)
+        result = json.loads(result)
+        print(result)
+        return_dict["sku"] = "RR Kabel SUPEREX GREEN"
+        return_dict["analysis"] = result["is_counterfeit"]
+        return_dict["confidence"] = result["confidence"]
+        return_dict["summary"] = result["summary"] + rejected_images_text
+    elif product[0] == "RR Kabel Q1":
+        reference_images = ['RR_FSE/RR-Q1/Q1BoxBack0.jpg', 'RR_FSE/RR-Q1/Q1BoxFront0.jpg']
+        reference_image_context = ['back of the the flat box', 'front of the flat box']
+        result = product_counterfeit_testing(product_images,
+                                             reference_images,
+                                             reference_image_context)
+        result = json.loads(result)
+        return_dict["sku"] = "RR Kabel Q1"
+        return_dict["analysis"] =  result["is_counterfeit"]
+        return_dict["confidence"] = result["confidence"]
+        return_dict["summary"] = result["summary"] + rejected_images_text
+
+    # Extract Barcodes
+    if len(barcode_images) > 0:
+        barcodes = product_barcode_extraction(barcode_images)
+        barcodes = json.loads(barcodes)
+        return_dict['barcodes'] = barcodes
+
+    # Extract Receipt
+    if len(receipt_images) > 0:
+        receipt = product_receipt_extraction(receipt_images, product[0])
+        receipt = json.loads(receipt)
+        print(receipt)
+        return_dict["receipt"] = receipt
+
+    # Create Response
+    delete_file(user_files)
+    logger.info(f"Processing complete")
+    return return_dict
 
 
 def _process_unsupported_input(result: Dict[str, Any]) -> Dict[str, Any]:
@@ -163,592 +479,15 @@ def _process_unsupported_input(result: Dict[str, Any]) -> Dict[str, Any]:
     logger.warning("Unsupported input type provided")
     result["input_type"] = "unsupported"
     
-    unsupported_result = {
-        "label": "Unknown",
-        "AI_media_authenticity": "Unknown",
-        "reason": "Unable to process input type, please provide text or base64 image. We will be adding support for more input types soon.",
-        "recommendation": "None",
-        "confidence": 0,
-        "extracted_websites": [],
-        "website_safety_checks": "N/A",
-        "website_safety_checks_summary": "N/A"
-    }
+    unsupported_result = {"sku": None,
+                   "analysis": None,
+                   "confidence": None,
+                   "summary": "Unable to process input type, please provide text or base64 image. We will be adding support for more input types soon.",
+                   "barcodes": [],
+                   "receipt": {"shop_name": None, "location": None}}
+
     
-    return _finalize_result(result, unsupported_result)
+    return  unsupported_result
 
 
-def _finalize_result(result: Dict[str, Any], final_result_json: Dict[str, Any]) -> Dict[str, Any]:
-    """Finalize the result structure and return it."""
-    result["final_output"] = json.dumps(final_result_json)
-    logger.info(f"Processing complete: {result['input_type']} - {len(result['steps'])} steps")
-    return result
-
-
-def parse_prediction_result(result_text):
-    """Parse the prediction result into structured data"""
-    try:
-        logger.info(f"Parsing prediction result: {result_text}")
-        lines = result_text.strip().split('\n')
-        parsed = {
-            'label': 'Unknown',
-            'confidence': 0,
-            'reason': 'Unable to parse result',
-            'recommendation': 'Please verify independently'
-        }
-        
-        for line in lines:
-            line = line.strip()
-            if line.startswith('Label:'):
-                parsed['label'] = line.replace('Label:', '').strip()
-            elif line.startswith('Confidence:'):
-                confidence_str = line.replace('Confidence:', '').strip().replace('%', '')
-                try:
-                    parsed['confidence'] = int(confidence_str)
-                except:
-                    parsed['confidence'] = 0
-            elif line.startswith('Reason:'):
-                parsed['reason'] = line.replace('Reason:', '').strip()
-            elif line.startswith('Recommendation:'):
-                parsed['recommendation'] = line.replace('Recommendation:', '').strip()
-        
-        return parsed
-        
-    except Exception as e:
-        print(f"Error parsing prediction result: {e}")
-        return {
-            'label': 'Error',
-            'confidence': 0,
-            'reason': 'Failed to parse analysis result',
-            'recommendation': 'Please try again'
-        }
-
-
-
-def get_openai_image_scam_analysis(image_data: Union[str, List[str]]) -> str:
-    """
-    Calls the OpenAI GPT-5 model with base64 encoded image(s) to perform scam analysis.
-
-    Args:
-        image_data (Union[str, List[str]]): The base64 encoded string(s) of the input image(s).
-                                            Can be a single string or list of up to 3 strings.
-
-    Returns:
-        str: The analysis result from the OpenAI model, or an error message.
-    """
-
-    system_role = '''You are an advanced Deception and Media Authenticity Detection Assistant.
-
-You analyze images or screenshots and classify them along three axes:
-1. Deception Intent – whether the content is being used to deceive (phishing, scams, impersonation, fake offers, provides misleading information, text mimics authority, spreads false feature updates).
-2. Media Authenticity – whether the media itself is authentic, manipulated, or AI-generated.
-3. Sender Origin – classify the sender identity type.
-
-⚠️ Output Rules:
-- Always respond ONLY in valid JSON.
-- Do not add extra fields, explanations, or text outside JSON.
-- Use the exact keys and allowed values shown below.
-- If the same input is repeated, return the exact same output (deterministic).
-
-JSON Schema:
-{
-  "label": "Likely Deception | Inconclusive | Likely No Deception",
-  "AI_media_authenticity": "Authentic | Manipulated | AI-generated | Unknown",
-  "reason": "string (≤ 80 words, concise explanation citing evidence)",
-  "recommendation": "string (guidance on verification steps)",
-  "confidence": "High | Medium | Low",
-  "extracted_websites": ["list of URLs, domains, or website references found in the image (empty array if none)"]
-}
-
-Decision Rules:
-1. Content Type:
-   - Identify type of message/image and assign to `content_type`.
-
-2. Website Extraction & Domain Status:
-   - Extract URLs/domains from the image.
-   - Mark as `whitelisted` if domain belongs to known brands (e.g., jio.com, icicibank.com).
-   - Mark as `suspicious_pattern` if it resembles a known brand but is misspelled or altered (e.g., gmai1.com).
-   - Otherwise mark as `unknown`.
-
-3. Sender Origin:
-   - 5–6 digit numeric sender = `shortcode`.
-   - Alphanumeric business sender (e.g., AM-JIO, HDFCBK) = `masked_business`.
-   - 10–12 digit normal phone number = `full_phone_number`.
-   - Otherwise = `unknown`.
-
-4. Media Authenticity:
-   - Flag `Manipulated` or `AI-generated` if the screenshot/photo shows clear signs of synthetic manipulation.
-   - Otherwise mark as `Authentic` or `Unknown`.
-
-5. Bank / Service Alerts:
-   - If the message resembles a bank/financial alert (transaction, OTP, card spend, block card instructions):
-       • If callback numbers/links cannot be verified → output should not assume Deception.
-       • Instead, set label = "Inconclusive" with confidence = "Medium".
-       • In "recommendation", instruct the user to verify the callback number or SMS code by cross-checking with the official website/app or the number printed on the card.
-       • Only classify as "Likely Deception" if strong scam signals are present (e.g., spoofed domains, misspellings, fake bank name, prize/lottery claims).
-
-6. Deception Intent:
-   - If scam cues exist (money/credentials request, urgent threats, impersonation, suspicious links) → "Deception".
-   - If text mimics authority, spreads false feature updates, or provides misleading information without links → "Deception".
-   - If text is unclear or lacks signals → "Inconclusive".
-   - If benign, generic, or safe informational text → "No Deception".
-
-7. Trusted Brand & Domain Checks:
-   - If the message references a well-known brand (e.g., Jio, HDFC, Paytm, Amazon):
-       • If the domain looks plausible but unverified, do not assume it is safe or scam.
-       • Instead, output: "Inconclusive".
-       • In "recommendation", advise the user to check the domain on the brand's official website or app store.
-   - Only classify as "Likely Deception" if the domain clearly spoofs (e.g., jio-safe-login.xyz) or the content has strong scam patterns.
-
-8. Confidence:
-   - High = clear evidence for or against scam.
-   - Medium = mixed signals.
-   - Low = insufficient evidence.
-
-Authority Detection (new, must run before Deception decision):
-1. Run OCR over the image/text and search for explicit authoritative entity names (exact-match candidates), e.g. "Maharashtra Police", "Central Bank of India", "Income Tax Dept", "DoT", "ICICI Bank", "Google", etc. Keep a short internal list of top-known agencies per country; treat exact matches as high-weight signals.
-2. Attempt logo/seal detection (if image mode): 
-   - If an official seal or emblem is visually detected or a high-confidence badge/logo classifier result is present, mark LOGO_DETECTED = true.
-   - If no image classifier available, set LOGO_DETECTED = false and rely on OCR name match.
-3. Detect layout/format indicators typical of official notices: header/title like "सूचना", centered heading, formal bullet lists, governmental phrasing, local-language formal register. Count these as FORMAL_LAYOUT = true/false.
-4. Compute an AUTHORITY_SCORE:
-   - +100 if OCR exact-match to known authoritative name.
-   - +60 if LOGO_DETECTED.
-   - +20 if FORMAL_LAYOUT true.
-   - -100 if the text explicitly requests money/credentials or contains suspicious URLs asking for login/OTP.
-   - -40 if domains in text are shortlinks or obviously spoofed.
-5. Authority outcomes:
-   - If AUTHORITY_SCORE >= 80 → treat as AUTHORITY_INDICATOR = "strong".
-   - If 30 <= AUTHORITY_SCORE < 80 → "weak".
-   - Otherwise → "none".
-6. Authority tie-break rules (override when AUTHORITY_INDICATOR = strong):
-   - If AUTHORITY_INDICATOR = "strong" AND no explicit credential/money request → label = "No Deception", confidence = "High". (Reason must include which signals matched.)
-   - If AUTHORITY_INDICATOR = "strong" BUT the message explicitly asks for credentials/money or contains suspicious links → label = "Inconclusive", confidence = "Medium" and recommend verifying via official channels (do not mark outright Deception).
-   - If AUTHORITY_INDICATOR = "weak" → continue normal Deception logic but favor "Inconclusive" over "Deception" unless high scam signals present.
-
-Special Rule:
-- Deepfake or manipulated media with no scam context → `Inconclusive` + `AI-generated/Manipulated`.
-- Deepfake/manipulated media used in scam → `Deception` + `AI-generated/Manipulated`.'''
-
-    if not openai_key:
-        return "Error: OpenAI API key not found. Please set the AI_API_KEY environment variable."
-
-    try:
-        # Convert single image to list for uniform processing
-        if isinstance(image_data, str):
-            image_list = [image_data]
-        else:
-            image_list = image_data[:3]  # Limit to 3 images
-        
-        client = OpenAI(
-            api_key=openai_key,
-        )
-
-        # Build content array with text and all images
-        user_content = [
-            {"type": "text", "text": f"Is there some form of deception in {'this image' if len(image_list) == 1 else 'these images'}? Please respond in the same language as used in the message."}
-        ]
-        
-        # Add all images to the content array
-        for image_base64 in image_list:
-            user_content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/png;base64,{image_base64}"
-                },
-            })
-        
-        messages = [
-            {"role": "system", "content": system_role},
-            {"role": "user", "content": user_content}
-        ]
-        
-        chat_completion = client.chat.completions.create(
-            model="gpt-5",
-            messages=messages
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        return f"An error occurred during OpenAI API call: {e}"
-
-
-def get_openai_text_scam_analysis(user_text: str) -> str:
-    """
-    Calls the OpenAI GPT-5 model  to perform scam analysis.
-
-    Args:
-        str: The str that the model will analyze.
-
-    Returns:
-        str: The analysis result from the OpenAI model, or an error message.
-        :param user_text:
-    """
-    system_role = '''You are an advanced Deception and Media Authenticity Detection Assistant.  
-
-This task involves analyzing forwarded text messages or emails.  
-⚠️ Important: Sender information and media authenticity cannot be checked in this mode. Only the message text content should be analyzed.  
-
-Axes of analysis:  
-1. Deception Intent – whether the forwarded text is being used to deceive (phishing, scams, impersonation, fake offers).  
-2. Website Extraction – extract and normalize domains/URLs from the text.  
-3. Domain Status – classify extracted domains if possible (whitelisted, suspicious_pattern, unknown).  
-4. Sender Origin – always set to "unknown" in forwarded-text mode.  
-5. Media Authenticity – always set to "Unknown" in forwarded-text mode.  
-
-⚠️ Output Rules:  
-- Always respond ONLY in valid JSON.  
-- Do not add explanations outside JSON.  
-- Use the exact keys and allowed values shown below.  
-- If the same input is repeated, return the exact same output (deterministic).  
-
-JSON Schema:
-{
-  "label": "Likely Deception | Inconclusive | Likely No Deception",
-  "AI_media_authenticity": "Authentic | Manipulated | AI-generated | Unknown",
-  "reason": "string (≤ 80 words, concise explanation citing evidence from text only)",
-  "recommendation": "string (guidance on verification steps)",
-  "confidence": "High | Medium | Low",
-  "extracted_websites": ["list of URLs, domains, or website references (empty array if none)"]"
-}
-
-Decision Rules:
-1. Content Type:
-   - Identify type of message/image and assign to `content_type`.
-
-2. Website Extraction & Domain Status:
-   - Extract URLs/domains from the image.
-   - Mark as `whitelisted` if domain belongs to known brands (e.g., jio.com, icicibank.com).
-   - Mark as `suspicious_pattern` if it resembles a known brand but is misspelled or altered (e.g., gmai1.com).
-   - Otherwise mark as `unknown`.
-
-3. Sender Origin:
-   - 5–6 digit numeric sender = `shortcode`.
-   - Alphanumeric business sender (e.g., AM-JIO, HDFCBK) = `masked_business`.
-   - 10–12 digit normal phone number = `full_phone_number`.
-   - Otherwise = `unknown`.
-
-4. Media Authenticity:
-   - Flag `Manipulated` or `AI-generated` if the screenshot/photo shows clear signs of synthetic manipulation.
-   - Otherwise mark as `Authentic` or `Unknown`.
-
-5. Bank / Service Alerts:
-   - If the message resembles a bank/financial alert (transaction, OTP, card spend, block card instructions):
-       • If callback numbers/links cannot be verified → output should not assume Deception.
-       • Instead, set label = "Inconclusive" with confidence = "Medium".
-       • In "recommendation", instruct the user to verify the callback number or SMS code by cross-checking with the official website/app or the number printed on the card.
-       • Only classify as "Likely Deception" if strong scam signals are present (e.g., spoofed domains, misspellings, fake bank name, prize/lottery claims).
-
-6. Deception Intent:
-   - If scam cues exist (money/credentials request, urgent threats, impersonation, suspicious links) → "Deception".
-   - If text mimics authority, spreads false feature updates, or provides misleading information without links → "Deception".
-   - If text is unclear or lacks signals → "Inconclusive".
-   - If benign, generic, or safe informational text → "No Deception".
-
-7. Trusted Brand & Domain Checks:
-   - If the message references a well-known brand (e.g., Jio, HDFC, Paytm, Amazon):
-       • If the domain looks plausible but unverified, do not assume it is safe or scam.
-       • Instead, output: "Inconclusive".
-       • In "recommendation", advise the user to check the domain on the brand's official website or app store.
-   - Only classify as "Likely Deception" if the domain clearly spoofs (e.g., jio-safe-login.xyz) or the content has strong scam patterns.
-
-8. Confidence:
-   - High = clear evidence for or against scam.
-   - Medium = mixed signals.
-   - Low = insufficient evidence..'''
-
-    if not openai_key:
-        return "Error: OpenAI API key not found. Please set the AI_API_KEY environment variable."
-
-    try:
-        client = OpenAI(
-            api_key=openai_key,
-        )
-
-        messages = [
-    {"role": "system", "content": system_role},
-    {"role": "user", "content": f"Is this a scam? This is the message the user sent '{user_text}'. Please respond in the same language as used in the message." }
-]
-        chat_completion = client.chat.completions.create(
-            model="gpt-5",
-            messages=messages
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        return f"An error occurred during OpenAI API call: {e}"
-
-# def preprocess_image_from_base64(image_base64):
-#     """
-#     Preprocess image (provided as a base64 string) for better OCR accuracy.
-
-#     Args:
-#         image_base64 (str): Base64 encoded string of the input image.
-
-#     Returns:
-#         numpy.ndarray: The preprocessed image as a NumPy array (thresholded).
-#     Raises:
-#         ValueError: If the base64 string cannot be decoded or image loading fails.
-#     """
-#     try:
-#         # Decode base64 string to bytes
-#         image_bytes = base64.b64decode(image_base64)
-#         # Read image into memory as a NumPy array
-#         np_arr = np.frombuffer(image_bytes, np.uint8)
-#         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-
-#         if img is None:
-#              raise ValueError("Could not decode base64 image.")
-
-#     except Exception as e:
-#         raise ValueError(f"Error processing base64 image: {e}")
-
-
-#     # Convert to grayscale
-#     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-#     # Denoise
-#     gray = cv2.fastNlMeansDenoising(gray, None, 30, 7, 21)
-
-#     # Adaptive thresholding (works better for photos/screenshots with varied lighting)
-#     thresh = cv2.adaptiveThreshold(
-#         gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-#         cv2.THRESH_BINARY, 31, 2
-#     )
-
-#     return thresh
-
-# def extract_text_from_base64(image_base64: str) -> str:
-#     """
-#     Run OCR on a base64 encoded image.
-
-#     Args:
-#         image_base64 (str): Base64 encoded string of the input image.
-
-#     Returns:
-#         str: The extracted text.
-#     Raises:
-#         ValueError: If the base64 string cannot be processed.
-#     """
-#     # Preprocess the image directly from base64
-#     processed_img = preprocess_image_from_base64(image_base64)
-
-#     # OCR
-#     # pytesseract.image_to_string expects a PIL Image or NumPy array
-#     text = pytesseract.image_to_string(processed_img)
-#     return text.strip()
-
-
-def extract_websites(text: str) -> list:
-    # Regex for http(s) URLs and bare domains
-    url_pattern = re.compile(
-        r'(https?://[^\s]+|www\.[^\s]+|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})'
-    )
-
-    matches = url_pattern.findall(text)
-
-    # Optional: Normalize (remove trailing punctuation, lowercase)
-    cleaned = [m.rstrip('.,;!?').lower() for m in matches]
-
-    return cleaned
-
-def check_virustotal(url: str) -> dict:
-    headers = {
-    "accept": "application/json",
-    "x-apikey": VT_API_KEY,
-    "content-type": "application/x-www-form-urlencoded"
-    }
-
-    payload = { "url": url }
-
-    # Step 1: Submit the URL for analysis
-    scan_resp = requests.post(
-        "https://www.virustotal.com/api/v3/urls",
-        headers=headers,
-        data=payload
-    )
-
-
-    if scan_resp.status_code != 200:
-        return {"error": f"VirusTotal POST error: {scan_resp.status_code}", "details": scan_resp.text}
-
-    # Step 2: Extract the analysis ID
-    analysis_id = scan_resp.json()["data"]["id"]
-
-    # Step 3: Retrieve the analysis results
-    result_resp = requests.get(
-        f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
-        headers=headers
-    )
-
-    if result_resp.status_code != 200:
-        return {"error": f"VirusTotal GET error: {result_resp.status_code}", "details": result_resp.text}
-
-    data = result_resp.json()
-    stats = data.get("data", {}).get("attributes", {}).get("stats", {})
-    malicious = stats.get("malicious", 0)
-    suspicious = stats.get("suspicious", 0)
-
-    return {"malicious": malicious, "suspicious": suspicious, "raw": stats}
-
-def check_google_safe_browsing(url : str) -> dict:
-    payload = {
-        "client": {"clientId": "safety-checker", "clientVersion": "1.0"},
-        "threatInfo": {
-            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
-            "platformTypes": ["ANY_PLATFORM"],
-            "threatEntryTypes": ["URL"],
-            "threatEntries": [{"url": url}]
-        }
-    }
-    resp = requests.post(
-        f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GSB_API_KEY}",
-        json=payload
-    )
-    print(resp)
-
-    if resp.status_code != 200:
-        return {"error": "Google Safe Browsing API error"}
-
-    matches = resp.json().get("matches", [])
-    return {"threat_found": len(matches) > 0, "details": matches}
-
-def check_whois(url : str) -> dict:
-    from datetime import datetime
-    try:
-        if not url.startswith(("http://", "https://")):
-            url = "http://www." + url.lstrip("www.")
-        domain = urlparse(url).netloc
-        w = whois.whois(domain)
-        creation_date = w.creation_date
-        if isinstance(creation_date, list):
-            creation_date = creation_date[0]
-
-        domain_age_days = None
-        if creation_date:
-            domain_age_days = (datetime.now() - creation_date).days
-
-        return {
-            "registrar": w.registrar,
-            "creation_date": creation_date.isoformat() if creation_date else None,
-            "domain_age_days": domain_age_days
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
-def check_url_safety(url : str) -> dict:
-    """
-     Check URL safety using VirusTotal, Google Safe Browsing, and WHOIS data.
-    1. VirusTotal: Check if the URL is flagged as malicious or suspicious.
-    2. Google Safe Browsing: Check if the URL is flagged as a threat.
-    3. WHOIS: Check domain age and registrar information.
-    Combine results to give an overall safety verdict.
-    """
-    results = {}
-    vt = check_virustotal(url)
-    gsb = check_google_safe_browsing(url)
-    whois_info = check_whois(url)
-
-    results["VirusTotal"] = vt
-    results["Google Safe Browsing"] = gsb
-    results["WHOIS"] = whois_info
-
-    verdict = "SAFE"
-    reason = []
-
-    if isinstance(vt, dict) and (vt.get("malicious", 0) > 0 or vt.get("suspicious", 0) > 0):
-        verdict = "UNSAFE"
-        reason.append("Flagged by VirusTotal")
-
-    if gsb.get("threat_found"):
-        verdict = "UNSAFE"
-        reason.append("Flagged by Google Safe Browsing")
-
-    if whois_info.get("domain_age_days") is not None and whois_info["domain_age_days"] < 30:
-        verdict = "UNSAFE"
-        reason.append("Very new domain (possible phishing)")
-
-    if whois_info.get("domain_age_days") is None:
-        verdict = "UNKNOWN"
-        reason.append("Domain age unknown")
-
-    results["Verdict"] = verdict
-    results["Reason"] = reason if reason else ["No known issues found"]
-    return results
-
-def check_all_url_safety(urls : list) -> dict:
-  output_url_check={}
-  if type(urls) != list or len(urls)>0:
-    for url in urls:
-      output_url_check[url] = check_url_safety(url)
-  return output_url_check
-
-
-def parse_openai_text_output(output_string: str) -> dict:
-    """
-    Parses the JSON string output from the OpenAI text scam analysis function
-    into a Python dictionary.
-
-    Args:
-        output_string (str): The JSON string output from the OpenAI model.
-
-    Returns:
-        dict: A dictionary containing the parsed analysis results.
-              Returns an error dictionary if parsing fails.
-    """
-    try:
-        # Attempt to load the JSON string directly
-        logger.info(f"Parsing openai text output: {output_string}")
-        parsed_output = json.loads(output_string)
-        return parsed_output
-    except json.JSONDecodeError:
-        # If direct loading fails, try to find and extract the JSON part
-        # This is a more robust approach for cases where the API might wrap the JSON in text
-        json_match = re.search(r'\{.*}', output_string, re.DOTALL)
-        if json_match:
-            try:
-                json_string = json_match.group(0)
-                parsed_output = json.loads(json_string)
-                return parsed_output
-            except json.JSONDecodeError:
-                # Try using ast.literal_eval for Python dict strings with single quotes
-                try:
-                    import ast
-                    json_string = json_match.group(0)
-                    parsed_output = ast.literal_eval(json_string)
-                    return parsed_output
-                except:
-                    return {"error": f"Failed to parse extracted JSON string.", "raw_output": output_string}
-        else:
-            return {"error": f"Failed to find JSON object in output.", "raw_output": output_string}
-    except Exception as e:
-        return {"error": f"An unexpected error occurred during parsing: {e}", "raw_output": output_string}
-
-
-tools = [
-    Tool(
-        name="TextScamAnalysis",
-        func=get_openai_text_scam_analysis,
-        description="Analyzes input text to determine if it is a scam."
-    ),
-    Tool(
-        name="ImageScamAnalysis",
-        func=get_openai_image_scam_analysis,
-        description="Analyzes an image for scam characteristics using OpenAI, optionally incorporating external website check results."
-    ),
-    Tool(
-        name="WebsiteExtractor",
-        func=extract_websites,
-        description="Extracts URLs and potential domain names from a given text string."
-    ),
-    Tool(
-        name="URLSafetyChecker",
-        func=check_all_url_safety,
-        description="Checks the safety of a set of URL's using multiple services like VirusTotal and Google Safe Browsing, and provides WHOIS information."
-    ),
-
-    #  Tool(
-    #     name="TextExtractor",
-    #     func=extract_text_from_base64,
-    #     description="Extracts text from a base64 encoded image."
-    # )
-]
-
-tool_map = {tool.name: tool.func for tool in tools}
+image_cache = GeminiImageCache()

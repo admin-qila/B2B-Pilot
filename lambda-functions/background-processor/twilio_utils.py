@@ -104,24 +104,34 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
     try:
         if isinstance(body, dict):
             # Format analysis result
-            label = body.get('label', 'Unknown')
-            confidence = body.get('confidence', 'Low')
-            reason = body.get('reason', 'Unable to determine')
-            recommendation = body.get('recommendation', 'Please verify independently')
-            
-            # Choose emoji based on label
-            if 'Likely Deception' in str(label):
+            logger.info(f"Preparing to send analysis result: {body}")
+
+            analysis = body.get('analysis', None)
+            summary = body.get('summary', 'No summary available')
+            barcode = body.get('barcode', [])
+            receipt = body.get('receipt', {})
+
+            if barcode:
+                summary += f"\nBarcode(s) detected: {', '.join(barcode)}\n"
+
+            for k, v in receipt.items():
+                if v:
+                    summary += f"{k}: {v}\n"
+
+                # Choose emoji based on label
+            if analysis:
                 emoji = '🚨'
                 color = '🔴'
-            elif 'Inconclusive' in str(label):
+                label = 'Detected as counterfeit.'
+            elif analysis is None:
                 emoji = '⚠️'
                 color = '🟡'
-            elif 'Likely No Deception' in str(label):
+                label = 'Not confirmed as genuine RR Kabel SUPEREX GREEN/Q1 or insufficient evidence (see summary).'
+            else:
                 emoji = '✅'
                 color = '🟢'
-            else:
-                emoji = '❓'
-                color = '⚪'
+                label = 'Confirmed as genuine RR Kabel SUPEREX GREEN/Q1.'
+
             
             # If we have a content template, use it
             if content_sid:
@@ -135,12 +145,12 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
                             "1": emoji,
                             "2": color,
                             "3": label,
-                            "4": body.get('confidence', 'Low'),
-                            "5": body.get('reason', 'Unable to determine'),
-                            "6": body.get('recommendation', 'Please verify independently'),
-                            "7": body.get('website_safety_checks_summary', 'No website check done'),
-                            "8": submission_id,
-                            "9": submission_id
+                            "4": body.get('sku', ''),
+                            "5": body.get('confidence', 'Low'),
+                            "6": summary,
+                            "7": submission_id,
+                            "8": submission_id
+
                         })
                     )
                     logger.info(f"WhatsApp template message sent successfully. SID: {message.sid}")
@@ -149,7 +159,7 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
                     logger.warning(f"Failed to send via template, falling back to regular message: {e}")
             
             # Fallback to regular message
-            formatted_body = f"{emoji} **Analysis Result**\n\n**Label:** {label}\n\n**Confidence:** {confidence}\n\n**Reason:** {reason}\n\n**Recommendation:** {recommendation}"
+            formatted_body = f"{emoji} **Analysis Result**\n\n**Label:** {label}\n\n**sku:** {body.get('sku', None)}\n\n**Confidence:** {body.get('confidence', 'Low')}\n\n**Summary:** {summary}"
         else:
             formatted_body = str(body)
         

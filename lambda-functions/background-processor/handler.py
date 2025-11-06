@@ -15,7 +15,7 @@ import base64
 import uuid
 from datetime import timedelta
 from models import get_db, UserSubmission, UsageInfo
-from predictor import predict_response, parse_prediction_result, get_openai_text_scam_analysis, parse_openai_text_output
+from predictor import predict_response
 from s3_service import get_s3_service
 
 # Add shared module to path
@@ -132,14 +132,14 @@ except ImportError as e:
             return phone.replace('whatsapp:', '')
         return phone
     
-    def send_whatsapp_message_via_template(client, to_number, from_number, body, media_url=None, submission_id=None, content_sid=None):
-        """Fallback implementation for template message sending"""
-        try:
-            # Simple fallback - just send regular message without template
-            return send_whatsapp_message(client, to_number, from_number, str(body))
-        except Exception as e:
-            logger.error(f"Error in fallback template message: {e}")
-            return None
+    # def send_whatsapp_message_via_template(client, to_number, from_number, body, media_url=None, submission_id=None, content_sid=None):
+    #     """Fallback implementation for template message sending"""
+    #     try:
+    #         # Simple fallback - just send regular message without template
+    #         return send_whatsapp_message(client, to_number, from_number, str(body))
+    #     except Exception as e:
+    #         logger.error(f"Error in fallback template message: {e}")
+    #         return None
 
 
 # Initialize clients
@@ -246,13 +246,8 @@ def process_unified_message(unified_message: UnifiedMessage, twilio_client, cont
             response_data = process_media_message(
                 unified_message, client_type_str, remaining_time
             )
-        elif unified_message.text_body:
-            # Handle text analysis
-            response_data = process_text_message_unified(
-                unified_message, client_type_str, remaining_time
-            )
         else:
-            error_message = "Please send an image or text message for analysis."
+            error_message = "Please send an image for analysis."
             if client_type_str == "whatsapp":
                 send_whatsapp_message(
                     twilio_client,
@@ -421,30 +416,6 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
 
             logger.info(f"Prediction result: {prediction_result}")
 
-            # Parse the result
-            parsed_result = {}
-            if isinstance(prediction_result, dict) and "final_output" in prediction_result:
-                final_output_str = prediction_result.get("final_output", "{}")
-                try:
-                    parsed_result = json.loads(final_output_str)
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON decode failed: {e} | Raw: {final_output_str[:200]}...")
-                    parsed_result = {
-                        'label': 'Unknown',
-                        'confidence': 0,
-                        'reason': 'Unable to parse analysis result',
-                        'recommendation': 'Please try again later'
-                    }
-            else:
-                parsed_result = {
-                    'label': 'Unknown',
-                    'confidence': 0,
-                    'reason': 'Invalid prediction result',
-                    'recommendation': 'Please try again later'
-                }
-            
-            logger.info(f"Parsed result {parsed_result}")
-            
             # Filter out None values from S3 keys and URLs
             s3_keys_filtered = [k for k in s3_keys if k is not None]
             original_urls_filtered = [u for u in original_media_urls if u is not None]
@@ -473,9 +444,9 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
                 phone_number=unified_message.phone_number,
                 image_url=image_url_value,
                 s3_key=s3_key_value,
-                prediction_result=parsed_result,
-                confidence_score=parsed_result.get('confidence'),
-                scam_label=parsed_result.get('label'),
+                prediction_result=prediction_result,
+                confidence_score=prediction_result.get('confidence'),
+                scam_label="",
                 processing_time_ms=processing_time,
                 input_text=unified_message.text_body  # Caption/description if any
             )
@@ -483,7 +454,7 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
             submission_id = db.create_submission(submission)
             
             return {
-                "body": parsed_result,
+                "body": prediction_result,
                 "submission_id": submission_id,
                 "client_type": client_type_str
             }
@@ -496,14 +467,6 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
         logger.error(f"Error analyzing media: {e}")
         return "Sorry, there was an error analyzing your media. Please try again."
 
-def process_text_message_unified(unified_message, client_type_str, max_processing_time):
-    """
-    Process text message for scam detection from any client type
-    """
-    db = get_db()
-    if not db:
-        return "Sorry, database service is temporarily unavailable. Please try again later."
-    return handle_text_analysis_unified(unified_message, client_type_str, db)
 
 
 def check_user_consent(phone_number):
@@ -557,99 +520,7 @@ def check_usage_limits(phone_number):
             'time_until_reset': timedelta(hours=24)
         }
 
-def format_analysis_result(parsed_result, current_usage, daily_limit, submission_id):
-    """Format the analysis result for WhatsApp"""
-    label = parsed_result.get('label', 'Unknown')
-    confidence = parsed_result.get('confidence', 'Low')
-    reason = parsed_result.get('reason', 'Unable to determine')
-    recommendation = parsed_result.get('recommendation', 'Please verify independently')
-    website_check = parsed_result.get('website_safety_checks_summary', 'No website check done')
-    
-    # Choose emoji based on label
-    if 'Likely Deception' in label:
-        emoji = '🚨'
-        color = '🔴'
-    elif 'Inconclusive' in label:
-        emoji = '⚠️'
-        color = '🟡'
-    elif 'Likely No Deception' in label:
-        emoji = '✅'
-        color = '🟢'
-    else:
-        emoji = '❓'
-        color = '⚪'
-    
-    response = f"""{emoji} **Analysis Result**
-    
-{color} **Label:** {label}
 
-📊 **Confidence:** {confidence}
-
-💡 **Reason:** {reason}
-
-🔍 **Recommendation:** {recommendation}
-
-🕸️ **Website Safety Checks:** {website_check}
-
-🚨 Thanks for being part of our Alpha Testers, and please provide any feedback to your point of contact"""
-    
-    return response
-
-
-def handle_text_analysis_unified(unified_message, client_type_str, db):
-    """Handle text content analysis from any client type"""
-    try:
-        # Analyze text
-        start_time = time.time()
-        
-        # Use predict_response which handles text input
-        prediction_result = predict_response(unified_message.text_body)
-        processing_time = int((time.time() - start_time) * 1000)
-        
-        # Extract the actual result from the prediction_result structure
-        if isinstance(prediction_result, dict) and 'final_output' in prediction_result:
-            try:
-                # Parse the final_output string which contains the JSON result
-                parsed_result = json.loads(prediction_result['final_output'])
-            except (json.JSONDecodeError, TypeError) as e:
-                logger.error(f"Failed to parse final_output JSON: {e}")
-                parsed_result = {
-                    'label': 'Unknown',
-                    'confidence': 0,
-                    'reason': 'Unable to parse analysis result',
-                    'recommendation': 'Please try again later'
-                }
-        else:
-            parsed_result = {
-                'label': 'Unknown',
-                'confidence': 0,
-                'reason': 'Invalid prediction result',
-                'recommendation': 'Please try again later'
-            }
-        
-        # Create submission record
-        submission = UserSubmission(
-            phone_number=unified_message.phone_number,
-            image_url=None,  # No image for text analysis
-            s3_key=None,
-            prediction_result=parsed_result,
-            confidence_score=parsed_result.get('confidence'),
-            scam_label=parsed_result.get('label'),
-            processing_time_ms=processing_time,
-            input_text=unified_message.text_body
-        )
-        
-        submission_id = db.create_submission(submission)
-        
-        return {
-            "body": parsed_result,
-            "submission_id": submission_id,
-            "client_type": client_type_str
-        }
-        
-    except Exception as e:
-        logger.error(f"Error analyzing text: {e}")
-        return "Sorry, there was an error analyzing your message. Please try again."
 
 def send_response_by_client_type(response_data, unified_message, client_type_str, twilio_client):
     """Send response based on client type"""

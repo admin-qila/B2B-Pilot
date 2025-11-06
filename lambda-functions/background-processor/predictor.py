@@ -7,7 +7,6 @@ import io
 import json
 import logging
 import os
-from distutils.command.config import config
 from typing import Any, Dict, Union
 from typing import List
 import datetime
@@ -441,7 +440,7 @@ def _process_with_analysis(
         return_dict["confidence"] = result["confidence"]
         return_dict["summary"] = result["summary"] + rejected_images_text
     elif product[0] == "RR Kabel Q1":
-        reference_images = ['RR_FSE/RR-Q1/Q1BoxBack0.jpg', 'RR_FSE/RR-Q1/Q1BoxFront0.jpg']
+        reference_images = ['RR_FSE/RR-Q1/Q1BoxTemplate.jpg', 'RR_FSE/RR-Q1/Q1BoxBack0.jpg', 'RR_FSE/RR-Q1/Q1BoxFront0.jpg']
         reference_image_context = ['back of the the flat box', 'front of the flat box']
         result = product_counterfeit_testing(product_images,
                                              reference_images,

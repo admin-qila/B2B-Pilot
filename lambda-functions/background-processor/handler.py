@@ -417,7 +417,7 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
             logger.info(f"Prediction result: {prediction_result}")
 
             # Filter out None values from S3 keys and URLs
-            s3_keys_filtered = [k for k in s3_keys if k is not None]
+            s3_keys_filtered = sorted([k for k in s3_keys if k is not None])
             original_urls_filtered = [u for u in original_media_urls if u is not None]
             
             # Determine values for image_url and s3_key fields:

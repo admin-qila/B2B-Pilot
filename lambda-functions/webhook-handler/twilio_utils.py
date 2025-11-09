@@ -104,24 +104,36 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
     try:
         if isinstance(body, dict):
             # Format analysis result
-            label = body.get('label', 'Unknown')
-            confidence = body.get('confidence', 'Low')
-            reason = body.get('reason', 'Unable to determine')
-            recommendation = body.get('recommendation', 'Please verify independently')
-            
-            # Choose emoji based on label
-            if 'Likely Deception' in str(label):
+            logger.info(f"Preparing to send analysis result: {body}")
+            logger.info(f"to_number: {to_number}")
+            logger.info(f"from_number: {from_number}")
+
+            analysis = body.get('analysis', None)
+            summary = body.get('summary', 'No summary available')
+            barcode = body.get('barcode', [])
+            receipt = body.get('receipt', {})
+
+            if barcode:
+                summary += f"\nBarcode(s) detected: {', '.join(barcode)}\n"
+
+            for k, v in receipt.items():
+                if v:
+                    summary += f"{k}: {v}\n"
+
+                # Choose emoji based on label
+            if analysis:
                 emoji = '🚨'
                 color = '🔴'
-            elif 'Inconclusive' in str(label):
+                label = 'Detected as counterfeit.'
+            elif analysis is None:
                 emoji = '⚠️'
                 color = '🟡'
-            elif 'Likely No Deception' in str(label):
+                label = 'Not confirmed as genuine RR Kabel SUPEREX GREEN/Q1 or insufficient evidence (see summary).'
+            else:
                 emoji = '✅'
                 color = '🟢'
-            else:
-                emoji = '❓'
-                color = '⚪'
+                label = 'Confirmed as genuine RR Kabel SUPEREX GREEN/Q1.'
+
             
             # If we have a content template, use it
             if content_sid:
@@ -135,13 +147,12 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
                             "1": emoji,
                             "2": color,
                             "3": label,
-                            "4": body.get('confidence', 'Low'),
-                            "5": body.get('reason', 'Unable to determine'),
-                            "6": body.get('recommendation', 'Please verify independently'),
-                            "7": body.get('website_safety_checks_summary', 'No website check done'),
-                            "8": submission_id,
-                            "9": submission_id,
-                            "10": submission_id
+                            "4": body.get('sku', ''),
+                            "5": body.get('confidence', 'Low'),
+                            "6": summary,
+                            "7": submission_id,
+                            "8": submission_id
+
                         })
                     )
                     logger.info(f"WhatsApp template message sent successfully. SID: {message.sid}")
@@ -150,7 +161,7 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
                     logger.warning(f"Failed to send via template, falling back to regular message: {e}")
             
             # Fallback to regular message
-            formatted_body = f"{emoji} **Analysis Result**\n\n**Label:** {label}\n\n**Confidence:** {confidence}\n\n**Reason:** {reason}\n\n**Recommendation:** {recommendation}"
+            formatted_body = f"{emoji} **Analysis Result**\n\n**Label:** {label}\n\n**sku:** {body.get('sku', None)}\n\n**Confidence:** {body.get('confidence', 'Low')}\n\n**Summary:** {summary}"
         else:
             formatted_body = str(body)
         
@@ -161,9 +172,24 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
         logger.error(f"Failed to send WhatsApp template message: {e}")
         return None
 
+def _generate_conversation_unique_name(proxy_address, address):
+    """
+    Generate a unique name for a conversation based on proxy_address and address.
+    Format: conv_{proxy_address}_{address}
+    
+    Args:
+        proxy_address: The Twilio WhatsApp number (proxy_address)
+        address: The recipient's WhatsApp number (address)
+    
+    Returns:
+        Unique name string
+    """
+    return f"conv_{proxy_address}_{address}"
+
 def get_or_create_conversation(client, to_number, from_number):
     """
-    Get or create a Twilio conversation for a participant
+    Get or create a Twilio conversation for a participant.
+    Uses unique_name for efficient lookup and falls back to paginated search if needed.
     
     Args:
         client: Twilio client instance
@@ -177,31 +203,111 @@ def get_or_create_conversation(client, to_number, from_number):
         # Format participant phone number
         participant_phone = format_phone_number(to_number)
         
-        # Try to find existing conversation with this participant
-        conversations = client.conversations.conversations.list(limit=50)
+        # Format from_number to ensure consistent comparison (E.164 format with whatsapp: prefix)
+        from_phone = format_phone_number(from_number)
+        formatted_from_number = f'whatsapp:{from_phone}'
+        formatted_address = f'whatsapp:{participant_phone}'
         
-        for conv in conversations:
-            participants = client.conversations.conversations(conv.sid).participants.list()
-            for participant in participants:
-                if participant.messaging_binding and participant.messaging_binding.get('address') == f'whatsapp:{participant_phone}':
-                    logger.info(f"Found existing conversation: {conv.sid}")
+        # Generate unique name for this conversation
+        unique_name = _generate_conversation_unique_name(formatted_from_number, formatted_address)
+        
+        # Strategy 1: Try to fetch conversation by unique_name (most efficient)
+        # Use fetch() method to get conversation directly by unique_name
+        # This prevents 409 errors when trying to create a duplicate
+        try:
+            conv = client.conversations.conversations(unique_name=unique_name).fetch()
+            # If we found a conversation with this unique_name, return it
+            # The unique_name itself is the identifier, so we trust it
+            logger.info(f"Found existing conversation by unique_name: {conv.sid} (unique_name={unique_name})")
+            
+            # Check if the correct participant exists, if not, we'll add it
+            participant_exists = False
+            try:
+                participants = client.conversations.conversations(conv.sid).participants.list()
+                for participant in participants:
+                    if participant.messaging_binding:
+                        participant_address = participant.messaging_binding.get('address')
+                        participant_proxy_address = participant.messaging_binding.get('proxy_address')
+                        
+                        if (participant_address == formatted_address and 
+                            participant_proxy_address == formatted_from_number):
+                            participant_exists = True
+                            break
+            except Exception as participant_check_error:
+                logger.warning(f"Error checking participants: {participant_check_error}")
+            
+            # If participant doesn't exist, add it
+            if not participant_exists:
+                try:
+                    # Try dictionary syntax first (for older SDK versions), fallback to separate parameters (newer SDK)
+                    try:
+                        client.conversations.conversations(conv.sid).participants.create(
+                            messaging_binding={
+                                'address': formatted_address,
+                                'proxy_address': formatted_from_number
+                            }
+                        )
+                    except TypeError:
+                        client.conversations.conversations(conv.sid).participants.create(
+                            messaging_binding_address=formatted_address,
+                            messaging_binding_proxy_address=formatted_from_number
+                        )
+                    logger.info(f"Added participant to existing conversation {conv.sid}")
+                except Exception as add_participant_error:
+                    # Participant might already exist or there's a conflict - that's okay
+                    logger.debug(f"Could not add participant (may already exist): {add_participant_error}")
+            
+            return conv.sid
+        except Exception as e:
+            # Conversation doesn't exist with this unique_name - that's okay, we'll create it
+            logger.debug(f"Conversation with unique_name={unique_name} does not exist yet: {e}")
+        
+        # Strategy 2: Try to create new conversation
+        # If we get a 409 error (conversation already exists), fetch it by unique_name
+        logger.info(f"Creating new conversation with unique_name={unique_name}")
+        try:
+            conversation = client.conversations.conversations.create(
+                friendly_name=f"WhatsApp conversation with {participant_phone}",
+                unique_name=unique_name
+            )
+            
+            # Add participant to conversation
+            try:
+                # Try dictionary syntax first (for older SDK versions), fallback to separate parameters (newer SDK)
+                try:
+                    client.conversations.conversations(conversation.sid).participants.create(
+                        messaging_binding={
+                            'address': formatted_address,
+                            'proxy_address': formatted_from_number
+                        }
+                    )
+                except TypeError:
+                    client.conversations.conversations(conversation.sid).participants.create(
+                        messaging_binding_address=formatted_address,
+                        messaging_binding_proxy_address=formatted_from_number
+                    )
+            except Exception as add_participant_error:
+                logger.warning(f"Could not add participant to new conversation: {add_participant_error}")
+            
+            logger.info(f"Created new conversation: {conversation.sid} with unique_name={unique_name}")
+            return conversation.sid
+            
+        except Exception as create_error:
+            # Check if this is a 409 error (conversation already exists)
+            error_str = str(create_error)
+            if '409' in error_str or 'already exists' in error_str.lower() or 'unique name' in error_str.lower():
+                logger.info(f"Conversation with unique_name={unique_name} already exists, fetching it")
+                # Try to fetch it using fetch() method - it might have been created between our check and create attempt
+                try:
+                    conv = client.conversations.conversations(unique_name=unique_name).fetch()
+                    logger.info(f"Retrieved existing conversation: {conv.sid} (unique_name={unique_name})")
                     return conv.sid
-        
-        # Create new conversation if none found
-        conversation = client.conversations.conversations.create(
-            friendly_name=f"WhatsApp conversation with {participant_phone}"
-        )
-        
-        # Add participant to conversation
-        client.conversations.conversations(conversation.sid).participants.create(
-            messaging_binding={
-                'address': f'whatsapp:{participant_phone}',
-                'proxy_address': from_number if from_number.startswith('whatsapp:') else f'whatsapp:{from_number}'
-            }
-        )
-        
-        logger.info(f"Created new conversation: {conversation.sid}")
-        return conversation.sid
+                except Exception as fetch_error:
+                    logger.error(f"Failed to fetch existing conversation after 409 error: {fetch_error}")
+                    raise create_error  # Re-raise original error if we can't fetch it
+            else:
+                # Some other error occurred
+                raise create_error
         
     except Exception as e:
         logger.error(f"Error getting/creating conversation: {e}")

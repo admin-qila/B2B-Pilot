@@ -493,7 +493,7 @@ def _process_with_analysis(
     if len(receipt_images) > 0:
         raw_receipt = product_receipt_extraction(receipt_images)
         receipt = safe_json_parse(raw_receipt, context="product_receipt_extraction")
-        logger.info(:"Receipt: {receipt}")
+        logger.info(f"Receipt: {receipt}")
         return_dict["receipt"] = receipt
 
     # ---- CLEANUP ----

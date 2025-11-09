@@ -224,7 +224,7 @@ Resources:
             Name: !Sub "stale-message-processor-schedule-${Environment}"
             Description: "Run the stale message processor every minute"
             Schedule: rate(1 minute)
-            Enabled: false
+            Enabled: true
 
   # CloudWatch Alarms
   QueueDepthAlarm:

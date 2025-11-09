@@ -109,9 +109,11 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
             logger.info(f"from_number: {from_number}")
 
             analysis = body.get('analysis', None)
-            summary = body.get('summary', 'No summary available')
-            barcode = body.get('barcode', [])
-            receipt = body.get('receipt', {})
+            summary = body.get('summary', 'No summary available') or 'No summary available'
+            barcode = body.get('barcode', []) or []
+            receipt = body.get('receipt', {}) or {}
+            sku = body.get('sku', '') or ''
+            confidence = body.get('confidence', 'low') or 'low'
 
             if barcode:
                 summary += f"\nBarcode(s) detected: {', '.join(barcode)}\n"
@@ -147,8 +149,8 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
                             "1": emoji,
                             "2": color,
                             "3": label,
-                            "4": body.get('sku', ''),
-                            "5": body.get('confidence', 'Low'),
+                            "4": sku,
+                            "5": confidence,
                             "6": summary,
                             "7": submission_id,
                             "8": submission_id

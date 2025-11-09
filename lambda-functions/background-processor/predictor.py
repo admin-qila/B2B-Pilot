@@ -406,7 +406,7 @@ def _process_with_analysis(
         raw_result = product_classification(img)
         parsed = safe_json_parse(raw_result, context="product_classification")
         result = parsed
-        logger.info(f"parse product classification: {result}")
+        logger.info(f"product_classification: {result}")
 
         if result["is_receipt_image"]:
             if result["partial_or_occluded"] or result["blurry_or_unclear"]:
@@ -461,7 +461,7 @@ def _process_with_analysis(
 
         raw_result = product_counterfeit_testing(product_images, reference_images, reference_image_context)
         parsed = safe_json_parse(raw_result, context="product_counterfeit_testing")
-        print(parsed)
+        logger.info(f"product_counterfeit_testing: {parsed}")
 
         return_dict["sku"] = "RR Kabel SUPEREX GREEN"
         return_dict["analysis"] = parsed["is_counterfeit"]
@@ -493,7 +493,7 @@ def _process_with_analysis(
     if len(receipt_images) > 0:
         raw_receipt = product_receipt_extraction(receipt_images)
         receipt = safe_json_parse(raw_receipt, context="product_receipt_extraction")
-        print(receipt)
+        logger.info(:"Receipt: {receipt}")
         return_dict["receipt"] = receipt
 
     # ---- CLEANUP ----

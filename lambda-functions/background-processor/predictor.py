@@ -349,13 +349,13 @@ def safe_json_parse(raw: str, context: str = "") -> dict:
         return json.loads(cleaned)
     except json.JSONDecodeError as e:
         logger.warning(f"[safe_json_parse] JSONDecodeError in {context}: {e}")
-        logger.debug(f"Raw content from {context}: {raw}")
+        logger.info(f"Raw content from {context}: {raw}")
         try:
             # Try Python literal parsing as fallback
             return ast.literal_eval(cleaned)
         except Exception as inner_e:
             logger.error(f"[safe_json_parse] Failed literal_eval in {context}: {inner_e}")
-            raise
+            return {}
 
 def _process_image_input(image_data: Union[str, List[str]], result: Dict[str, Any]) -> Dict[str, Any]:
     """Process image input (single or multiple) for scam detection."""

@@ -13,6 +13,7 @@ import datetime
 import csv
 from google import genai
 from google.genai import types
+import ast
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -329,25 +330,40 @@ def predict_response(input_data: Union[str, bytes, List[str]]) -> Dict[str, Any]
     """
     result = {"input_type": None, "steps": [], "final_output": None}
     
-    # Check if it's a list of images
-    if isinstance(input_data, list):
-        return _process_image_input(input_data, result)
-    elif isinstance(input_data, str):
-        return _process_image_input(input_data, result)
-    else:
-        return _process_unsupported_input(result)
+    try:
+        # Check if it's a list of images
+        if isinstance(input_data, list):
+            return _process_image_input(input_data, result)
+        elif isinstance(input_data, str):
+            return _process_image_input(input_data, result)
+        else:
+            return _process_unsupported_input(result)
+    except Exception as e:
+        logger.exception(f"Error during predict_response: {e}")
 
-
+def safe_json_parse(raw: str, context: str = "") -> dict:
+    """Safely parse JSON or Python dict string with fallback."""
+    try:
+        # Clean up if model returns Markdown-style code blocks
+        cleaned = raw.strip().strip("```json").strip("```").strip()
+        return json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        logger.warning(f"[safe_json_parse] JSONDecodeError in {context}: {e}")
+        logger.debug(f"Raw content from {context}: {raw}")
+        try:
+            # Try Python literal parsing as fallback
+            return ast.literal_eval(cleaned)
+        except Exception as inner_e:
+            logger.error(f"[safe_json_parse] Failed literal_eval in {context}: {inner_e}")
+            raise
 
 def _process_image_input(image_data: Union[str, List[str]], result: Dict[str, Any]) -> Dict[str, Any]:
     """Process image input (single or multiple) for scam detection."""
-    # Convert single image to list for uniform processing
     if isinstance(image_data, str):
         image_data = [image_data]
-    
-    # Limit to maximum 3 images
-    image_data = image_data[:3]
-    
+
+    image_data = image_data[:3]  # limit to 3 images
+
     return _process_with_analysis(
         input_data=image_data,
         input_type="image",
@@ -360,53 +376,56 @@ def _process_with_analysis(
     input_type: str,
     result: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Unified processing logic for both text and image inputs."""
     logger.info(f"Processing {input_type} input")
     global image_cache
     result["input_type"] = input_type
-    
-    # Log number of images if processing multiple
+
     if isinstance(input_data, list):
         logger.info(f"Processing {len(input_data)} images")
-    
-    # Perform initial analysis
+
     product = []
     product_images = []
     barcode_images = []
     receipt_images = []
     rejected_images = []
-    rejected_images_reason = ''
-    return_dict = {"sku": None,
-                   "analysis": None,
-                   "confidence": None,
-                   "summary": None,
-                   "barcodes": [],
-                   "receipt": {"shop_name": None, "location": None}
-                   }
+    rejected_images_reason = ""
+    return_dict = {
+        "sku": None,
+        "analysis": None,
+        "confidence": None,
+        "summary": None,
+        "barcodes": [],
+        "receipt": {"shop_name": None, "location": None},
+    }
+
     image_cache = get_latest_gemini_files()
     user_files = upload_file_from_base64(input_data)
+
+    # ---- MAIN LOOP ----
     for img in user_files:
-        result = product_classification(img)
-        result = json.loads(result)
-        print(result)
+        raw_result = product_classification(img)
+        parsed = safe_json_parse(raw_result, context="product_classification")
+        result = parsed
+        logger.info(f"product_classification: {result}")
+
         if result["is_receipt_image"]:
-            if result['partial_or_occluded'] or result['blurry_or_unclear']:
+            if result["partial_or_occluded"] or result["blurry_or_unclear"]:
                 rejected_images.append(img.name)
-                rejected_images_reason += str(len(rejected_images)) + ". " + result["reason"]
-                if result['request_new_image']:
-                    rejected_images_reason += result['request_new_image_reason']
+                rejected_images_reason += f"{len(rejected_images)}. {result['reason']}"
+                if result["request_new_image"]:
+                    rejected_images_reason += result["request_new_image_reason"]
             else:
                 receipt_images.append(img)
-        elif result['multiple_products']:
+        elif result["multiple_products"]:
             rejected_images.append(img.name)
-            rejected_images_reason += str(len(rejected_images)) + ". " + result["reason"]
+            rejected_images_reason += f"{len(rejected_images)}. {result['reason']}"
             continue
         elif result["is_product_match"]:
-            if result['partial_or_occluded'] or result['blurry_or_unclear']:
+            if result["partial_or_occluded"] or result["blurry_or_unclear"]:
                 rejected_images.append(img.name)
-                rejected_images_reason += str(len(rejected_images)) + ". " + result["reason"]
-                if result['request_new_image']:
-                    rejected_images_reason += result['request_new_image_reason']
+                rejected_images_reason += f"{len(rejected_images)}. {result['reason']}"
+                if result["request_new_image"]:
+                    rejected_images_reason += result["request_new_image_reason"]
             else:
                 product.append(result["product"])
                 product_images.append(img)
@@ -415,59 +434,73 @@ def _process_with_analysis(
             continue
         else:
             rejected_images.append(img.name)
-            rejected_images_reason += str(len(rejected_images)) + ". " + result["reason"]
-    if len(rejected_images) > 0:
-        rejected_images_text = f" Rejected Images: {len(rejected_images)} of {len(user_files)}. Reason : {rejected_images_reason}"
-    else:
-        rejected_images_text = ""
+            rejected_images_reason += f"{len(rejected_images)}. {result['reason']}"
+
+    # ---- REJECTED IMAGE SUMMARY ----
+    rejected_images_text = (
+        f" Rejected Images: {len(rejected_images)} of {len(user_files)}. Reason : {rejected_images_reason}"
+        if len(rejected_images) > 0
+        else ""
+    )
+
     if not is_valid_image_set(product, receipt_images):
-        return_dict["summary"] = f"Cannot Process, we can only process images of same product(SUPEREX GREEN or Q1) and maximum 1 receipt image." + rejected_images_text
+        return_dict["summary"] = (
+            "Cannot Process, we can only process images of same product (SUPEREX GREEN or Q1) "
+            "and maximum 1 receipt image." + rejected_images_text
+        )
         return return_dict
 
-    # Product Images Send to check authentic
+    # ---- PRODUCT COUNTERFEIT TEST ----
     if product[0] == "RR Kabel SUPEREX GREEN":
-        reference_images = ['RR_FSE/RR-SuperGreen/SuperexGreenBoxTemplate.jpg',
-                            'RR_FSE/RR-SuperGreen/SuperexGreenBoxBack0.jpg',
-                            'RR_FSE/RR-SuperGreen/SuperexGreenBoxFront1.jpg']
-        reference_image_context = ['box template', 'back of the the box', 'front of the box']
-        result = product_counterfeit_testing(product_images,
-                                             reference_images,
-                                             reference_image_context)
-        result = json.loads(result)
-        print(result)
+        reference_images = [
+            "RR_FSE/RR-SuperGreen/SuperexGreenBoxTemplate.jpg",
+            "RR_FSE/RR-SuperGreen/SuperexGreenBoxBack0.jpg",
+            "RR_FSE/RR-SuperGreen/SuperexGreenBoxFront1.jpg",
+        ]
+        reference_image_context = ["box template", "back of the the box", "front of the box"]
+
+        raw_result = product_counterfeit_testing(product_images, reference_images, reference_image_context)
+        parsed = safe_json_parse(raw_result, context="product_counterfeit_testing")
+        logger.info(f"product_counterfeit_testing: {parsed}")
+
         return_dict["sku"] = "RR Kabel SUPEREX GREEN"
-        return_dict["analysis"] = result["is_counterfeit"]
-        return_dict["confidence"] = result["confidence"]
-        return_dict["summary"] = result["summary"] + rejected_images_text
+        return_dict["analysis"] = parsed["is_counterfeit"]
+        return_dict["confidence"] = parsed["confidence"]
+        return_dict["summary"] = parsed["summary"] + rejected_images_text
+
     elif product[0] == "RR Kabel Q1":
-        reference_images = ['RR_FSE/RR-Q1/Q1BoxTemplate.jpg', 'RR_FSE/RR-Q1/Q1BoxBack0.jpg', 'RR_FSE/RR-Q1/Q1BoxFront0.jpg']
-        reference_image_context = ['back of the the flat box', 'front of the flat box']
-        result = product_counterfeit_testing(product_images,
-                                             reference_images,
-                                             reference_image_context)
-        result = json.loads(result)
+        reference_images = [
+            "RR_FSE/RR-Q1/Q1BoxTemplate.jpg",
+            "RR_FSE/RR-Q1/Q1BoxBack0.jpg",
+            "RR_FSE/RR-Q1/Q1BoxFront0.jpg",
+        ]
+        reference_image_context = ["back of the the flat box", "front of the flat box"]
+
+        raw_result = product_counterfeit_testing(product_images, reference_images, reference_image_context)
+        parsed = safe_json_parse(raw_result, context="product_counterfeit_testing")
         return_dict["sku"] = "RR Kabel Q1"
-        return_dict["analysis"] =  result["is_counterfeit"]
-        return_dict["confidence"] = result["confidence"]
-        return_dict["summary"] = result["summary"] + rejected_images_text
+        return_dict["analysis"] = parsed["is_counterfeit"]
+        return_dict["confidence"] = parsed["confidence"]
+        return_dict["summary"] = parsed["summary"] + rejected_images_text
 
-    # Extract Barcodes
+    # ---- BARCODE EXTRACTION ----
     if len(barcode_images) > 0:
-        barcodes = product_barcode_extraction(barcode_images)
-        barcodes = json.loads(barcodes)
-        return_dict['barcodes'] = barcodes
+        raw_barcodes = product_barcode_extraction(barcode_images)
+        barcodes = safe_json_parse(raw_barcodes, context="product_barcode_extraction")
+        return_dict["barcodes"] = barcodes
 
-    # Extract Receipt
+    # ---- RECEIPT EXTRACTION ----
     if len(receipt_images) > 0:
-        receipt = product_receipt_extraction(receipt_images)
-        receipt = json.loads(receipt)
-        print(receipt)
+        raw_receipt = product_receipt_extraction(receipt_images)
+        receipt = safe_json_parse(raw_receipt, context="product_receipt_extraction")
+        logger.info(f"Receipt: {receipt}")
         return_dict["receipt"] = receipt
 
-    # Create Response
+    # ---- CLEANUP ----
     delete_file(user_files)
-    logger.info(f"Processing complete")
+    logger.info("Processing complete")
     return return_dict
+
 
 
 def _process_unsupported_input(result: Dict[str, Any]) -> Dict[str, Any]:

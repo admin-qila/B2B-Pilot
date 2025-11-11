@@ -1,5 +1,5 @@
 """
-AWS Lambda function for processing messages from multiple clients via SQS
+AWS Lambda function for processing messages from multiple clients via SNS
 This function performs the heavy processing and sends replies appropriately
 Supports: WhatsApp (via Twilio), WebApp, and Mobile clients
 """
@@ -143,15 +143,14 @@ except ImportError as e:
 
 
 # Initialize clients
-sqs = boto3.client('sqs')
 s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
     """
-    Main Lambda handler for SQS message processing from multiple clients
+    Main Lambda handler for SNS message processing from multiple clients
     
     Args:
-        event: SQS event containing one or more messages
+        event: SNS event containing one or more messages
         context: Lambda context
     
     Returns:
@@ -167,36 +166,40 @@ def lambda_handler(event, context):
         processed_count = 0
         failed_count = 0
         
-        # Process each message from SQS
+        # Process each message from SNS
         for record in event['Records']:
             try:
-                # Parse the unified message
-                message_body = json.loads(record['body'])
-                receipt_handle = record['receiptHandle']
+                # Extract SNS message
+                sns_message = record['Sns']
+                message_body = json.loads(sns_message['Message'])
+                
+                # Extract message_id from SNS MessageAttributes for idempotency
+                sns_message_id = sns_message.get('MessageId')
+                message_attributes = sns_message.get('MessageAttributes', {})
+                custom_message_id = message_attributes.get('message_id', {}).get('Value', sns_message_id)
+                
+                logger.info(f"Received SNS message. MessageId: {sns_message_id}, Custom MessageId: {custom_message_id}")
                 
                 # Convert back to UnifiedMessage object
                 unified_message = UnifiedMessage.from_dict(message_body)
                 
-                logger.info(f"Processing {unified_message.client_type} message ID: {unified_message.message_id}")
+                logger.info(f"Processing {unified_message.client_type} message from {unified_message.phone_number}")
                 
-                # Process the message based on client type
-                success = process_unified_message(unified_message, twilio_client, context)
+                # Process the message based on client type (with idempotency check)
+                success = process_unified_message(unified_message, twilio_client, context, custom_message_id)
                 
                 if success:
-                    # Delete message from queue on successful processing
-                    sqs.delete_message(
-                        QueueUrl=record['eventSourceARN'].split(':')[-1],
-                        ReceiptHandle=receipt_handle
-                    )
                     processed_count += 1
                 else:
-                    # Message will return to queue for retry
                     failed_count += 1
+                    # Raise exception to trigger DLQ for this message
+                    raise Exception("Message processing failed")
                     
             except Exception as e:
                 logger.error(f"Error processing individual message: {e}")
                 failed_count += 1
-                # Don't delete message - let it retry
+                # Re-raise to trigger DLQ (SNS will send to DLQ after max retries)
+                raise
         
         logger.info(f"Processing complete. Processed: {processed_count}, Failed: {failed_count}")
         
@@ -210,14 +213,15 @@ def lambda_handler(event, context):
         logger.error(f"Fatal error in message processor: {e}")
         raise
 
-def process_unified_message(unified_message: UnifiedMessage, twilio_client, context):
+def process_unified_message(unified_message: UnifiedMessage, twilio_client, context, message_id: str):
     """
-    Process a unified message from any client type
+    Process a unified message from any client type with idempotency check
     
     Args:
         unified_message: UnifiedMessage object
         twilio_client: Initialized Twilio client (for WhatsApp responses)
         context: Lambda context for timeout checking
+        message_id: SNS message ID for idempotency
         
     Returns:
         bool: True if processed successfully, False otherwise
@@ -228,6 +232,15 @@ def process_unified_message(unified_message: UnifiedMessage, twilio_client, cont
         client_type_str = unified_message.client_type
         
         logger.info(f"Processing {client_type_str} message from {unified_message.phone_number}")
+        
+        # Check for duplicate message (idempotency)
+        db = get_db()
+        if db and message_id:
+            # Check if this message_id has already been processed
+            existing_submission = db.get_submission_by_message_id(message_id)
+            if existing_submission:
+                logger.info(f"Message {message_id} already processed. Submission ID: {existing_submission.get('id')}. Skipping duplicate.")
+                return True  # Return success to avoid retries
         
         # Check if we have enough time to process (leave 30 seconds buffer)
         remaining_time = context.get_remaining_time_in_millis() / 1000
@@ -242,9 +255,9 @@ def process_unified_message(unified_message: UnifiedMessage, twilio_client, cont
         # Process content based on type
         response_data = None
         if unified_message.media_items:
-            # Handle media analysis
+            # Handle media analysis (pass message_id for idempotency)
             response_data = process_media_message(
-                unified_message, client_type_str, remaining_time
+                unified_message, client_type_str, remaining_time, message_id
             )
         else:
             error_message = "Please send an image for analysis."
@@ -298,10 +311,16 @@ def handle_button_feedback(unified_message: UnifiedMessage) -> bool:
         logger.error(f"Error updating submission feedback: {e}")
         return False
 
-def process_media_message(unified_message, client_type_str, max_processing_time):
+def process_media_message(unified_message, client_type_str, max_processing_time, message_id: str = None):
     """
     Process media message for scam detection from any client type
     Supports up to 3 images at once
+    
+    Args:
+        unified_message: UnifiedMessage object
+        client_type_str: Client type string
+        max_processing_time: Maximum processing time
+        message_id: SNS message ID for idempotency
     """
     db = get_db()
     if not db:
@@ -448,7 +467,8 @@ def process_media_message(unified_message, client_type_str, max_processing_time)
                 confidence_score=prediction_result.get('confidence'),
                 scam_label="",
                 processing_time_ms=processing_time,
-                input_text=unified_message.text_body  # Caption/description if any
+                input_text=unified_message.text_body,  # Caption/description if any
+                message_id=message_id  # Store message_id for idempotency
             )
             
             submission_id = db.create_submission(submission)

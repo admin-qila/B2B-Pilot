@@ -9,7 +9,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # AWS Configuration
-SQS_QUEUE_URL = os.environ.get('SQS_QUEUE_URL')
 SQS_DLQ_URL = os.environ.get('SQS_DLQ_URL')
 
 # Twilio Configuration
@@ -30,7 +29,6 @@ VISIBILITY_TIMEOUT = 360  # 6 minutes visibility timeout for SQS
 def validate_config():
     """Validate that all required environment variables are set"""
     required_vars = {
-        'SQS_QUEUE_URL': SQS_QUEUE_URL,
         'TWILIO_ACCOUNT_SID': TWILIO_ACCOUNT_SID,
         'TWILIO_AUTH_TOKEN': TWILIO_AUTH_TOKEN,
         'TWILIO_PHONE_NUMBER': TWILIO_PHONE_NUMBER

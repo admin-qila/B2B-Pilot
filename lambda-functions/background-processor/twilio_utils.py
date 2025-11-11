@@ -130,11 +130,11 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
             elif analysis is None:
                 emoji = '⚠️'
                 color = '🟡'
-                label = 'Not confirmed as genuine RR Kabel SUPEREX GREEN/Q1 or insufficient evidence (see summary).'
+                label = 'Not confirmed as genuine RR Kabel or insufficient evidence (see summary).'
             else:
                 emoji = '✅'
                 color = '🟢'
-                label = 'Confirmed as genuine RR Kabel SUPEREX GREEN/Q1.'
+                label = 'Confirmed as genuine RR Kabel Product'
 
             
             # If we have a content template, use it

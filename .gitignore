@@ -8,3 +8,5 @@ data/
 outputs/
 .DS_Store
 .aws-sam/
+/venv/
+/lambda-functions/background-processor/RR_FSE_test/

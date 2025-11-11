@@ -15,6 +15,7 @@ from google import genai
 from google.genai import types
 import ast
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -219,7 +220,7 @@ def product_classification(img,
 def product_counterfeit_testing(img,
                                 reference_images,
                                 reference_image_context,
-                                system_prompt_name ="RR_counterfeit_detection_system_prompt_v3",
+                                system_prompt_name ="RR_counterfeit_detection_system_prompt_v4",
                                 user_prompt = "Check if the User images are of counterfeit products.",
                                 model_name ="gemini-2.5-flash"
                                 ):

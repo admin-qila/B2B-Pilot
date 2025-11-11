@@ -22,14 +22,14 @@ from message_parser import UnifiedMessage, MessageParser
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize SQS client
-sqs = boto3.client('sqs')
-SQS_QUEUE_URL = os.environ.get('SQS_QUEUE_URL')
+# Initialize SNS client
+sns = boto3.client('sns')
+SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
 
 
 def lambda_handler(event, context):
     """
-    Process stale message groups and send them to SQS
+    Process stale message groups and send them to SNS
     
     This function is triggered by CloudWatch Events on a schedule
     (e.g., every 10 seconds) to ensure messages are eventually processed
@@ -51,7 +51,7 @@ def lambda_handler(event, context):
                 'body': json.dumps({'processed': 0, 'message': 'No stale messages'})
             }
         
-        # Send each stale message to SQS
+        # Send each stale message to SNS
         processed_count = 0
         failed_count = 0
         
@@ -60,17 +60,47 @@ def lambda_handler(event, context):
                 # Convert dict to UnifiedMessage
                 unified_message = UnifiedMessage.from_dict(message_dict)
                 
-                # Create SQS message
-                sqs_message_data = MessageParser.create_sqs_message(unified_message)
+                # Generate unique message ID for idempotency
+                import uuid
+                from datetime import datetime
+                message_id = str(uuid.uuid4())
                 
-                # Send to SQS
-                response = sqs.send_message(
-                    QueueUrl=SQS_QUEUE_URL,
-                    MessageBody=sqs_message_data['message_body'],
-                    MessageAttributes=sqs_message_data['message_attributes']
+                # Create message body
+                message_body = json.dumps(unified_message.to_dict())
+                
+                # Create SNS message attributes
+                message_attributes = {
+                    'client_type': {
+                        'DataType': 'String',
+                        'StringValue': unified_message.client_type
+                    },
+                    'phone_number': {
+                        'DataType': 'String',
+                        'StringValue': unified_message.phone_number
+                    },
+                    'message_id': {
+                        'DataType': 'String',
+                        'StringValue': message_id
+                    },
+                    'timestamp': {
+                        'DataType': 'String',
+                        'StringValue': datetime.utcnow().isoformat()
+                    },
+                    'source': {
+                        'DataType': 'String',
+                        'StringValue': 'stale_processor'
+                    }
+                }
+                
+                # Publish to SNS
+                response = sns.publish(
+                    TopicArn=SNS_TOPIC_ARN,
+                    Message=message_body,
+                    MessageAttributes=message_attributes,
+                    Subject=f"Stale message from {unified_message.client_type}"
                 )
                 
-                logger.info(f"Sent stale message to SQS. MessageId: {response['MessageId']}, "
+                logger.info(f"Sent stale message to SNS. MessageId: {response['MessageId']}, "
                           f"Phone: {unified_message.phone_number}, Media items: {len(unified_message.media_items)}")
                 processed_count += 1
                 

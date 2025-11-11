@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 'B2B Pilot Async Processing with Lambda and SQS'
+Description: 'B2B Pilot Async Processing with Lambda and SNS'
 
 Parameters:
   Environment:
@@ -75,24 +75,19 @@ Globals:
 
 Resources:
 
-  # Main SQS Queue
-  MessageQueue:
-    Type: AWS::SQS::Queue
+  # Main SNS Topic for near-instant message delivery
+  MessageTopic:
+    Type: AWS::SNS::Topic
     Properties:
-      QueueName: !Sub "b2b-pilot-messages-${Environment}"
-      VisibilityTimeout: 360
-      MessageRetentionPeriod: 86400
-      ReceiveMessageWaitTimeSeconds: 20
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
-        maxReceiveCount: 3
+      TopicName: !Sub "b2b-pilot-messages-${Environment}"
+      DisplayName: "B2B Pilot Message Processing Topic"
       Tags:
         - Key: Application
           Value: B2B-Pilot
         - Key: Purpose
           Value: WhatsAppProcessing
 
-  # Dead Letter Queue
+  # Dead Letter Queue for failed messages (SNS -> Lambda failures)
   DeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -113,11 +108,10 @@ Resources:
       Handler: handler.lambda_handler
       Environment:
         Variables:
-          SQS_QUEUE_URL: !Ref MessageQueue
-          SQS_DLQ_URL: !Ref DeadLetterQueue
+          SNS_TOPIC_ARN: !Ref MessageTopic
       Policies:
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt MessageQueue.QueueName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt MessageTopic.TopicName
       Events:
         WebhookApi:
           Type: Api
@@ -148,25 +142,24 @@ Resources:
       FunctionName: !Sub "b2b-pilot-background-processor-${Environment}"
       CodeUri: background-processor/
       Handler: handler.lambda_handler
-      Environment:
-        Variables:
-          SQS_QUEUE_URL: !Ref MessageQueue
+      ReservedConcurrentExecutions: 10  # Limit concurrent executions for cost control
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt DeadLetterQueue.Arn
       Policies:
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt MessageQueue.QueueName
-        - SQSPollerPolicy:
-            QueueName: !GetAtt MessageQueue.QueueName
         - S3CrudPolicy:
             BucketName: !Ref S3BucketName
       Events:
-        SQSEvent:
-          Type: SQS
+        SNSEvent:
+          Type: SNS
           Properties:
-            Queue: !GetAtt MessageQueue.Arn
-            BatchSize: 5
-            MaximumBatchingWindowInSeconds: 5
-            FunctionResponseTypes:
-              - ReportBatchItemFailures
+            Topic: !Ref MessageTopic
+            # Optional: Add filter policy for different message types
+            # FilterPolicy:
+            #   client_type:
+            #     - whatsapp
+            #     - webapp
+            #     - mobile
 
   # Presigned URL Lambda
   PresignedUrlFunction:
@@ -213,10 +206,10 @@ Resources:
       MemorySize: 256
       Environment:
         Variables:
-          SQS_QUEUE_URL: !Ref MessageQueue
+          SNS_TOPIC_ARN: !Ref MessageTopic
       Policies:
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt MessageQueue.QueueName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt MessageTopic.TopicName
       Events:
         ScheduleEvent:
           Type: Schedule
@@ -227,21 +220,21 @@ Resources:
             Enabled: true
 
   # CloudWatch Alarms
-  QueueDepthAlarm:
+  SNSFailedDeliveryAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "b2b-pilot-queue-depth-high-${Environment}"
-      AlarmDescription: Alert when queue backlog grows
-      MetricName: ApproximateNumberOfMessagesVisible
-      Namespace: AWS/SQS
-      Statistic: Average
+      AlarmName: !Sub "b2b-pilot-sns-failed-delivery-${Environment}"
+      AlarmDescription: Alert when SNS messages fail to deliver to Lambda
+      MetricName: NumberOfNotificationsFailed
+      Namespace: AWS/SNS
+      Statistic: Sum
       Period: 300
-      EvaluationPeriods: 2
-      Threshold: 100
-      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
-        - Name: QueueName
-          Value: !GetAtt MessageQueue.QueueName
+        - Name: TopicName
+          Value: !GetAtt MessageTopic.TopicName
 
   DLQAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -295,9 +288,9 @@ Outputs:
   WebhookUrl:
     Description: Twilio webhook URL
     Value: !Sub "https://${WebhookApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/authenticity_check"
-  QueueUrl:
-    Description: SQS Queue URL
-    Value: !Ref MessageQueue
+  TopicArn:
+    Description: SNS Topic ARN
+    Value: !Ref MessageTopic
   DLQUrl:
     Description: Dead Letter Queue URL
     Value: !Ref DeadLetterQueue

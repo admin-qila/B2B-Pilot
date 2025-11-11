@@ -17,7 +17,7 @@ sys.path.append('/opt/shared')  # Shared utilities path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 try:
-    from config import SQS_QUEUE_URL, logger, validate_config
+    from config import SNS_TOPIC_ARN, logger, validate_config
     from client_utils import detect_client_type, ClientType
     from message_parser import MessageParser
     from validation_factory import ValidationFactory
@@ -26,14 +26,14 @@ try:
 except ImportError as e:
     print(f"Import error: {e}")
     # Fallback to environment variables if config module not found
-    SQS_QUEUE_URL = os.environ.get('SQS_QUEUE_URL')
+    SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
     
     # Create basic logger
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
     def validate_config():
-        if not SQS_QUEUE_URL:
+        if not SNS_TOPIC_ARN:
             raise ValueError("Missing required environment variables")
     
     # Import fallbacks for shared utilities
@@ -51,10 +51,7 @@ except ImportError as e:
         UNKNOWN = "unknown"
 
 # Initialize AWS clients
-sqs = boto3.client('sqs')
-
-# Initialize AWS clients
-sqs = boto3.client('sqs')
+sns = boto3.client('sns')
 
 def lambda_handler(event, context):
     """
@@ -134,9 +131,9 @@ def lambda_handler(event, context):
             message_to_send = unified_message.to_dict()
             is_aggregated_final_message = False
 
-        # Send to SQS
+        # Send to SNS for near-instant delivery
         try:
-            # Create SQS message from unified message (or aggregated message)
+            # Create SNS message from unified message (or aggregated message)
             if isinstance(message_to_send, dict):
                 # Convert aggregated dict back to UnifiedMessage
                 from message_parser import UnifiedMessage
@@ -144,15 +141,42 @@ def lambda_handler(event, context):
             else:
                 message_obj = unified_message
             
-            sqs_message_data = MessageParser.create_sqs_message(message_obj)
+            # Generate unique message ID for idempotency
+            import uuid
+            message_id = str(uuid.uuid4())
             
-            response = sqs.send_message(
-                QueueUrl=SQS_QUEUE_URL,
-                MessageBody=sqs_message_data['message_body'],
-                MessageAttributes=sqs_message_data['message_attributes']
+            # Create message body
+            message_body = json.dumps(message_obj.to_dict())
+            
+            # Create SNS message attributes
+            message_attributes = {
+                'client_type': {
+                    'DataType': 'String',
+                    'StringValue': message_obj.client_type
+                },
+                'phone_number': {
+                    'DataType': 'String',
+                    'StringValue': message_obj.phone_number
+                },
+                'message_id': {
+                    'DataType': 'String',
+                    'StringValue': message_id
+                },
+                'timestamp': {
+                    'DataType': 'String',
+                    'StringValue': datetime.utcnow().isoformat()
+                }
+            }
+            
+            # Publish to SNS
+            response = sns.publish(
+                TopicArn=SNS_TOPIC_ARN,
+                Message=message_body,
+                MessageAttributes=message_attributes,
+                Subject=f"Message from {message_obj.client_type}"
             )
             
-            logger.info(f"Message queued successfully. SQS MessageId: {response['MessageId']}")
+            logger.info(f"Message published to SNS successfully. MessageId: {response['MessageId']}")
             
             # If this is the final message in an aggregated group, return empty response
             # (the acknowledgment was already sent with the first message)
@@ -172,7 +196,7 @@ def lambda_handler(event, context):
             )
             
         except Exception as e:
-            logger.error(f"Failed to queue message to SQS: {e}")
+            logger.error(f"Failed to publish message to SNS: {e}")
             # Return success response to avoid retries, but log the error
             return ResponseFactory.create_success_response(
                 client_type,

@@ -45,6 +45,7 @@ class UserSubmission:
     feedback_text: Optional[str] = None
     feedback_timestamp: Optional[datetime] = None
     input_text: Optional[str] = None
+    message_id: Optional[str] = None  # SNS Message ID for idempotency
 
 @dataclass
 class UsageInfo:
@@ -279,7 +280,8 @@ class DatabaseManager:
                 'confidence_score': submission.confidence_score,
                 'scam_label': submission.scam_label,
                 'processing_time_ms': submission.processing_time_ms,
-                'input_text': submission.input_text
+                'input_text': submission.input_text,
+                'message_id': submission.message_id
             }
             
             response = self.supabase.table('b2b_pilot_user_submissions').insert(data).execute()
@@ -306,6 +308,23 @@ class DatabaseManager:
             
         except Exception as e:
             logger.error(f"Error fetching submission {submission_id}: {e}")
+            return None
+    
+    def get_submission_by_message_id(self, message_id: str) -> Optional[Dict]:
+        """Get a submission by its message_id (for idempotency check)"""
+        try:
+            response = self.supabase.table('b2b_pilot_user_submissions')\
+                .select('*')\
+                .eq('message_id', message_id)\
+                .limit(1)\
+                .execute()
+            
+            if response.data:
+                return response.data[0]
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error fetching submission by message_id {message_id}: {e}")
             return None
     
     def get_latest_submission_without_feedback(self, phone_number: str) -> Optional[Dict]:

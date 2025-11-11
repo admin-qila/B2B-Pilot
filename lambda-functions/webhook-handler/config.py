@@ -9,8 +9,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # AWS Configuration
-SQS_QUEUE_URL = os.environ.get('SQS_QUEUE_URL')
-SQS_DLQ_URL = os.environ.get('SQS_DLQ_URL')
+SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
 
 # Twilio Configuration
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -24,13 +23,12 @@ SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
 
 # Processing Configuration
 MAX_PROCESSING_TIME_SECONDS = 300  # 5 minutes max for background processing
-VISIBILITY_TIMEOUT = 360  # 6 minutes visibility timeout for SQS
 
 # Validate critical environment variables
 def validate_config():
     """Validate that all required environment variables are set"""
     required_vars = {
-        'SQS_QUEUE_URL': SQS_QUEUE_URL,
+        'SNS_TOPIC_ARN': SNS_TOPIC_ARN,
         'TWILIO_ACCOUNT_SID': TWILIO_ACCOUNT_SID,
         'TWILIO_AUTH_TOKEN': TWILIO_AUTH_TOKEN,
         'TWILIO_PHONE_NUMBER': TWILIO_PHONE_NUMBER

@@ -1,5 +1,5 @@
 """
-AWS Lambda function for processing messages from multiple clients via SQS
+AWS Lambda function for processing messages from multiple clients via SNS
 This function performs the heavy processing and sends replies appropriately
 Supports: WhatsApp (via Twilio), WebApp, and Mobile clients
 """

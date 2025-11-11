@@ -142,7 +142,6 @@ Resources:
       FunctionName: !Sub "b2b-pilot-background-processor-${Environment}"
       CodeUri: background-processor/
       Handler: handler.lambda_handler
-      ReservedConcurrentExecutions: 10  # Limit concurrent executions for cost control
       DeadLetterQueue:
         Type: SQS
         TargetArn: !GetAtt DeadLetterQueue.Arn

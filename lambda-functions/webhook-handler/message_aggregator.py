@@ -123,7 +123,7 @@ class MessageAggregator:
                 time_elapsed = (datetime.utcnow() - first_message_time.replace(tzinfo=None)).total_seconds()
                 
                 # Process if we have 3+ messages or if 3+ seconds have passed
-                if len(messages) >= 3 or time_elapsed > 3:
+                if len(messages) >= 2 or time_elapsed > 3:
                     self.supabase.table('whatsapp_message_groups')\
                         .delete()\
                         .eq('group_key', group_key)\

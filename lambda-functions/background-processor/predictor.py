@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 IMG_SIZE = 299
 # DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 GEMINI_API_KEY = os.getenv('AI_API_KEY')
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-2.5-pro"
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 image_cache = {}
@@ -111,7 +111,7 @@ def compare_user_images(
     response_structure: dict,
     reference_images: List[str],
     reference_image_context: List[str],
-    model_name: str = "gemini-2.5-flash"
+    model_name: str = "gemini-2.5-pro"
 ):
     """
     Compare fixed reference images (cached remotely on Gemini) against user-uploaded images.
@@ -163,7 +163,10 @@ def compare_user_images(
                 top_p=1.0,
                 system_instruction = system_prompt_ref,
                 response_mime_type="application/json",
-                response_schema=response_structure
+                response_schema=response_structure,
+                thinking_config=types.ThinkingConfig(
+                    thinking_budget=128
+                )
             )
         )
         logger.info("Model generation successful")
@@ -222,12 +225,12 @@ def product_counterfeit_testing(img,
                                 reference_image_context,
                                 system_prompt_name ="RR_counterfeit_detection_system_prompt_v4",
                                 user_prompt = "Check if the User images are of counterfeit products.",
-                                model_name ="gemini-2.5-flash"
+                                model_name ="gemini-2.5-pro"
                                 ):
     response_structure = {
         "type": "OBJECT",
         "properties":    {
-              "is_counterfeit": {"type": "BOOLEAN", "nullable": True},
+              "is_counterfeit": {"type": "STRING", "enum": ["true", "false", "unknown"]},
               "confidence":{"type": "STRING", "enum": ["low", "medium", "high"]},
               "summary": {"type": "STRING", "nullable": False},
               "evidence": {"type": "ARRAY",
@@ -266,7 +269,7 @@ def extract_user_images_info(
     user_files: List,
     user_prompt: str,
     response_structure:dict,
-    model_name: str = "gemini-2.5-flash"
+    model_name: str = "gemini-2.5-pro"
 ):
     parts = ["User images:",
         *user_files,
@@ -276,11 +279,15 @@ def extract_user_images_info(
             model = model_name,
             contents=parts,
             config=types.GenerateContentConfig(
-                temperature=0.0,
-                top_k=1,
-                top_p=1.0,
+                temperature=0.1,
+                top_k=10,
+                top_p=0.7,
+                max_output_tokens=500,
+                stop_sequences=['0' * 100],
                 response_mime_type="application/json",
-                response_schema=response_structure
+                response_schema=response_structure,
+                thinking_config=types.ThinkingConfig(
+                    thinking_budget=128)
             )
         )
         logger.info("Model generation successful")
@@ -290,7 +297,25 @@ def extract_user_images_info(
 
 
 def product_barcode_extraction(img: List):
-    prompt = "Detect all the QR codes and barcodes from the images, output a JSON list of detected codes, each item including 'type', 'data'"
+    prompt = """You are a fast and precise barcode and QR code detector.
+
+Task:
+- Detect all barcodes and QR codes in the provided image.
+- For each detected code, return:
+  - "type": one of ["QR", "EAN-13", "UPC-A", "Code128", "Code39", "DataMatrix", "PDF417", "Unknown"]
+  - "data": the decoded text. ONLY the first 100 characters.
+- If the code is visible but unreadable, return `"data": "present but unreadable"`.
+- If the decoded data is suspiciously long (over 100 characters of repeating digits or gibberish), mark it `"present but unreadable"`.
+- Never guess or fabricate text.
+- Return a compact, valid JSON list **only** — no prose, explanations, or comments.
+- If no codes detected, return `[]`.
+
+Example output:
+[
+  {"type": "QR", "data": "https://example.com"},
+  {"type": "Code128", "data": "present but unreadable"}
+]
+"""
     return_structure = {"type": "ARRAY",
                            "items": {
                                 "type": "OBJECT",
@@ -300,8 +325,19 @@ def product_barcode_extraction(img: List):
                                             }
                                     }
                             }
-    result = extract_user_images_info(user_files=img,user_prompt=prompt,response_structure=return_structure)
-    return result.text
+    try:
+        result = extract_user_images_info(
+                user_files=img,
+                user_prompt=prompt,
+                response_structure=return_structure
+        )
+        logger.info("Barcode extraction successful")
+        if not result.text:
+            return [{'type': 'Not Extractable', 'data': 'Not Extractable'}]
+        return result.text
+    except Exception as e:
+        logger.error("Model generation failed in product_barcode_extraction: %s", e)
+        return [{'type': 'Not Extractable', 'data': 'Not Extractable'}]
 
 
 def product_receipt_extraction(img: list):
@@ -313,8 +349,13 @@ def product_receipt_extraction(img: list):
             "location": {"type": "STRING", "nullable": True}
         }
     }
-    result = extract_user_images_info(user_files=img, user_prompt=prompt, response_structure=return_structure)
-    return result.text
+    try:
+        result = extract_user_images_info(user_files=img, user_prompt=prompt, response_structure=return_structure)
+        logger.info("Receipt extraction successful")
+        return result.text
+    except Exception as e:
+        logger.error("Model generation failed in product_barcode_extraction: %s", e)
+        return {'shop_name': None, 'location': None}
 
 def is_valid_image_set(product: List[str], reciept_images: List[str]):
     # Rules: 1. Max 1 product 2. Max 1 receipt image
@@ -379,6 +420,8 @@ def _process_with_analysis(
 ) -> Dict[str, Any]:
     logger.info(f"Processing {input_type} input")
     global image_cache
+    global client
+    client = genai.Client(api_key=GEMINI_API_KEY)
     result["input_type"] = input_type
 
     if isinstance(input_data, list):
@@ -439,15 +482,15 @@ def _process_with_analysis(
 
     # ---- REJECTED IMAGE SUMMARY ----
     rejected_images_text = (
-        f" Rejected Images: {len(rejected_images)} of {len(user_files)}. Reason : {rejected_images_reason}"
+        f" *Rejected Images* : {len(rejected_images)} of {len(user_files)}.\n*Reason* : {rejected_images_reason}"
         if len(rejected_images) > 0
         else ""
     )
 
     if not is_valid_image_set(product, receipt_images):
         return_dict["summary"] = (
-            "Cannot Process, we can only process images of same product (SUPEREX GREEN or Q1) "
-            "and maximum 1 receipt image." + rejected_images_text
+            "Cannot Process, we can only process 1 product box image of SUPEREX GREEN or Q1 "
+            "and maximum 1 receipt image. \n" + rejected_images_text
         )
         return return_dict
 
@@ -475,7 +518,7 @@ def _process_with_analysis(
             "RR_FSE/RR-Q1/Q1BoxBack0.jpg",
             "RR_FSE/RR-Q1/Q1BoxFront0.jpg",
         ]
-        reference_image_context = ["back of the the flat box", "front of the flat box"]
+        reference_image_context = ["box template", "back of the the box", "front of the box"]
 
         raw_result = product_counterfeit_testing(product_images, reference_images, reference_image_context)
         parsed = safe_json_parse(raw_result, context="product_counterfeit_testing")

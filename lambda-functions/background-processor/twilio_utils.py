@@ -110,31 +110,36 @@ def send_whatsapp_message_via_template(client, to_number, from_number, body, med
 
             analysis = body.get('analysis', None)
             summary = body.get('summary', 'No summary available') or 'No summary available'
-            barcode = body.get('barcode', []) or []
+            barcode = body.get('barcodes', []) or []
             receipt = body.get('receipt', {}) or {}
             sku = body.get('sku', '') or ''
             confidence = body.get('confidence', 'low') or 'low'
 
             if barcode:
-                summary += f"\nBarcode(s) detected: {', '.join(barcode)}\n"
-
+                summary += f"\n*Barcode(s) Detected*:"
+                for code in barcode:
+                    summary += f"\n- Code Type : {code['type']} | Value : {code['data']}"
+            summary += "\n"
             for k, v in receipt.items():
                 if v:
-                    summary += f"{k}: {v}\n"
+                    if k == "shop_name":
+                        summary += f"*Shop Name*: {v}\n"
+                    elif k == "location":
+                        summary += f"*Shop Location*: {v}\n"
 
                 # Choose emoji based on label
-            if analysis:
+            if analysis == 'true':
                 emoji = '🚨'
                 color = '🔴'
-                label = 'Detected as counterfeit.'
-            elif analysis is None:
-                emoji = '⚠️'
-                color = '🟡'
-                label = 'Not confirmed as genuine RR Kabel or insufficient evidence (see summary).'
-            else:
+                label = 'Counterfeit.'
+            elif analysis == 'false':
                 emoji = '✅'
                 color = '🟢'
-                label = 'Confirmed as genuine RR Kabel Product'
+                label = 'Genuine'
+            else:
+                emoji = '⚠️'
+                color = '🟡'
+                label = 'Insufficient evidence (see summary).'
 
             
             # If we have a content template, use it

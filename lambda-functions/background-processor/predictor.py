@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 IMG_SIZE = 299
 # DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 GEMINI_API_KEY = os.getenv('AI_API_KEY')
-MODEL_NAME = "gemini-2.5-pro"
+MODEL_NAME = "gemini-2.5-flash"
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 image_cache = {}
@@ -111,7 +111,7 @@ def compare_user_images(
     response_structure: dict,
     reference_images: List[str],
     reference_image_context: List[str],
-    model_name: str = "gemini-2.5-pro"
+    model_name: str = "gemini-2.5-flash"
 ):
     """
     Compare fixed reference images (cached remotely on Gemini) against user-uploaded images.
@@ -225,7 +225,7 @@ def product_counterfeit_testing(img,
                                 reference_image_context,
                                 system_prompt_name ="RR_counterfeit_detection_system_prompt_v4",
                                 user_prompt = "Check if the User images are of counterfeit products.",
-                                model_name ="gemini-2.5-pro"
+                                model_name ="gemini-2.5-flash"
                                 ):
     response_structure = {
         "type": "OBJECT",
@@ -269,7 +269,7 @@ def extract_user_images_info(
     user_files: List,
     user_prompt: str,
     response_structure:dict,
-    model_name: str = "gemini-2.5-pro"
+    model_name: str = "gemini-2.5-flash"
 ):
     parts = ["User images:",
         *user_files,
@@ -280,8 +280,8 @@ def extract_user_images_info(
             contents=parts,
             config=types.GenerateContentConfig(
                 temperature=0.1,
-                top_k=10,
-                top_p=0.7,
+                top_k=1,
+                top_p=1.0,
                 max_output_tokens=500,
                 stop_sequences=['0' * 100],
                 response_mime_type="application/json",
@@ -303,9 +303,9 @@ Task:
 - Detect all barcodes and QR codes in the provided image.
 - For each detected code, return:
   - "type": one of ["QR", "EAN-13", "UPC-A", "Code128", "Code39", "DataMatrix", "PDF417", "Unknown"]
-  - "data": the decoded text. ONLY the first 100 characters.
+  - "data": the decoded text. 
 - If the code is visible but unreadable, return `"data": "present but unreadable"`.
-- If the decoded data is suspiciously long (over 100 characters of repeating digits or gibberish), mark it `"present but unreadable"`.
+- If the decoded data is suspiciously long (over 100 characters of repeating digits or gibberish), extract first hundred characters`.
 - Never guess or fabricate text.
 - Return a compact, valid JSON list **only** — no prose, explanations, or comments.
 - If no codes detected, return `[]`.

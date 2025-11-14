@@ -14,8 +14,8 @@ import csv
 from google import genai
 from google.genai import types
 import ast
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 
 # Configure logging
@@ -537,11 +537,11 @@ def _process_with_analysis(
             parsed_reject = safe_json_parse(reject_images_check, context="rejected_product_counterfeit_testing")
             if parsed_reject['is_counterfeit'] == 'true' and parsed_reject['confidence'] in ['high', 'medium']:
                 logger.info(f"rejected_product_counterfeit_testing: {parsed_reject}")
-                rejected_images_reason += f"\n *Counterfeit Analysis*: {parsed_reject['summary']}"
+                rejected_images_reason += f"\n*Counterfeit Analysis*: {parsed_reject['summary']}"
 
     # ---- REJECTED IMAGE SUMMARY ----
     rejected_images_text = (
-        f" *Rejected Images* : {len(rejected_images)} of {len(user_files)}.\n*Reason* : {rejected_images_reason}"
+        f"*Rejected Images* : {len(rejected_images)} of {len(user_files)}.\n*Reason* : {rejected_images_reason}"
         if len(rejected_images) > 0
         else ""
     )

@@ -97,7 +97,6 @@ def delete_file(user_files):
 
 def load_prompts(name: str, prompt_file="prompts.json"):
     current_working_directory = os.getcwd()
-    print(f"Current working directory prompts: {current_working_directory}")
     if not os.path.exists(prompt_file):
         raise FileNotFoundError(f"Prompt file not found: {prompt_file}")
     with open(prompt_file, "r") as f:

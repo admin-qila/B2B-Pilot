@@ -1,0 +1,1560 @@
+[
+  {
+    "image": "IMG-20251028-WA0036.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference in branding, product name, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0023.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the branding and design of the reference product.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0021.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference image.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0020.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0031.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0025.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference in branding, text, and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0033.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear box of RR Kabel SUPEREX GREEN HR+FR, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0027.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel box with 'SUPEREX GREEN HR+FR' visible on the green band, matching the reference product.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0026.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference image.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0032.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0041.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251027-WA0008.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows multiple boxes of RR Kabel SUPEREX GREEN, matching the reference product in branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0096.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference in brand, product line, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0121.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0134.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference in brand, product line, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0120.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0097.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows one clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251027-WA0009.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a clear, identifiable packaging box of RR Kabel SUPEREX GREEN, matching the reference in branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0040.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference image.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0054.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a clear, identifiable packaging box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0095.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a clear, identifiable packaging box for 'RR Kabel SUPEREX GREEN' which matches the reference product in branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0123.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding, text, and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0137.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box with matching branding, product line, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0080.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0057.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0047.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0084.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding, text, and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0127.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference in branding, product name, and design. The barcode is visible.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0126.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0132.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0046.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0050.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0078.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0093.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a clear, identifiable RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0124.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0130.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a clear, identifiable packaging box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0118.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference image.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0119.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0131.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0125.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding, text, and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0086.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a partial view of the RR Kabel SUPEREX GREEN packaging, matching the design, text, and imagery of the reference product.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0092.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding, text, and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0079.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference in branding, product line, and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0048.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a clear, single box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0060.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding, text, and green color scheme.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0128.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0100.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, identifiable box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0114.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0115.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0129.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0061.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference in branding, product name, and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0075.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is blurry and severely cropped, making it impossible to identify the product or confirm a match. Key branding and product line details are missing.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image. Ensure the entire product packaging box is visible, in focus, well-lit, and not blurry or cropped."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0049.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference image.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0063.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0117.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0103.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding, text, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0102.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel box with 'SUPEREX GREEN HR+FR' text, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0116.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference image.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251027-WA0003.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0089.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0076.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0062.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0066.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference in branding, product line, and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0099.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box with matching branding, product line, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0112.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image shows a single, clear box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0106.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference in brand, product line, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0107.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0113.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single RR Kabel SUPEREX GREEN box. The top of the box is visible and matches the reference, but a foot partially occludes the bottom.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image ensuring the entire product box is visible and unobstructed, with good lighting and focus."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0098.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0073.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0059.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251027-WA0010.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's brand, product line, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0105.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference in brand, product line, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0138.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0110.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single, identifiable RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0058.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0064.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference in branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0017.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0016.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0014.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0015.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference in branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0039.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true
+    }
+  }
+]

@@ -1,0 +1,1630 @@
+[
+  {
+    "image": "IMG-20251028-WA0022.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to identify the product or confirm a match with the reference products.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus, well-lit, and the main face is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "havells copy.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The user image shows a 'Havells LifeLine Plus S' product, which does not match the 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1' reference products.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0142.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three boxes. One matches 'RR Kabel SUPEREX GREEN'. Another is 'FIREX LSOH - EBXL'. The third is 'FLAMEX HR+FR'. Multiple products are present, and not all match the references.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of either RR Kabel SUPEREX GREEN or RR Kabel Q1, ensuring the main face is visible and in focus."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0156.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image contains multiple products. One box matches 'RR Kabel SUPEREX GREEN', but two other boxes are different products (Firex LSOH-EBXL and Flamex HR+FR).",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of the reference product, centered and in good light."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0157.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "One of the three visible boxes clearly matches the RR Kabel SUPEREX GREEN reference product in branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0143.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image contains multiple products. One box matches 'RR Kabel SUPEREX GREEN', but another box is 'FIREX LSOH - EBXL', and the third box is 'FLAMEX HR+FR'.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of either 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1' centered, in focus, and with good lighting."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0037.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry and out of focus to identify the product, brand, or any specific details for matching.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus, well-lit, and clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0035.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0155.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "One box clearly matches 'RR Kabel SUPEREX GREEN' in design and text. Multiple boxes are present, including other RR Kabel products.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0141.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three boxes. One is 'SUPEREX GREEN HR+FR' which matches a reference. Another is 'FLAMEX HR+FR' and the third is 'FIREX LSOH-EBXL', neither of which are reference products.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of a reference product."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0140.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image contains multiple products. One box is 'RR Kabel SUPEREX GREEN', but another is 'RR Kabel FIREX LSOH - EBXL' and a third is 'RR Kabel FLAMEX HR+FR'.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of the reference product, centered and in good light."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0154.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows multiple products, including one clear box of 'RR Kabel SUPEREX GREEN' which matches the reference.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0034.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to identify the product, brand, or packaging design reliably.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus and well-lit so text and design are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0024.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry and dark to identify any product packaging or text. No details are discernible.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image. Ensure the box is centered, in focus, well-lit, and a full face is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0030.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to confirm the product details and ensure a reliable match with the reference.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus and well-lit so text and design are clearly legible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0150.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three different product boxes. One box matches 'RR Kabel SUPEREX GREEN', but the other two are different products (Firex LSOH + EBXL and Flamex HR+FR).",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of the reference product."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0144.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "Multiple products are visible. One box matches 'RR Kabel SUPEREX GREEN', but two other distinct products are also present.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of a reference product."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0145.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three different product boxes. One matches 'RR Kabel SUPEREX GREEN', but two other distinct products are also visible.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of either 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1'."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0151.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three different RR Kabel products, none of which are 'RR Kabel Q1'. One box is 'RR Kabel SUPEREX GREEN', but multiple products are present.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of either 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1'."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0147.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "One box matches 'RR Kabel SUPEREX GREEN' in branding and design. Two other distinct products are also visible.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0153.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three distinct product boxes. One matches 'RR Kabel SUPEREX GREEN', but two other boxes are 'RR Kabel FLAMEX' and 'RR Kabel FIREX LSOH-EBXL', which are not reference products.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of either 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1'."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0152.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three distinct product boxes. One matches 'RR Kabel SUPEREX GREEN', but two other products ('FLAMEX HR+FR' and 'FIREX LSOH - EBXL') are also present.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of the reference product."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0146.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0069.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is severely blurry and heavily cropped, making it impossible to identify the product or brand. Key details are illegible.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image. Keep the box centered, in focus, under good light, and ensure the full main face of the packaging is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0055.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0082.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to clearly identify the product name, brand, or packaging design for a reliable match.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the product box is in focus and well-lit, with the main face clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0109.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to identify the product, brand, or packaging design reliably. Text and details are illegible.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus, well-lit, and the main face is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0108.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry and out of focus to reliably identify the product, brand, or packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is centered, in focus, and well-lit so text and logos are clearly legible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0083.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to clearly identify the product name, brand, or packaging design for a reliable match.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus and well-lit so text and design details are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0068.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image is severely cropped, showing only a small portion of the box with a QR code and partial text, making product identification impossible.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image ensuring the full product box is visible, centered, in focus, and under good lighting to allow for proper identification."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0042.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear box of RR Kabel SUPEREX GREEN, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0056.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is blurry and severely cropped, preventing clear identification of the product line and full packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the entire product box is in focus, well-lit, and clearly visible without severe cropping."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0081.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry and out of focus to reliably identify the product, brand, or packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is centered, in focus, and well-lit so that text and design details are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0094.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to confirm the product details and ensure a reliable match with the reference product.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus and well-lit so text and design details are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0043.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to clearly identify the product line or specific packaging design for comparison.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus, well-lit, and the main face with product details is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0053.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry and out of focus to identify the product or match it to any reference. Text and QR code are unreadable.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is centered, in focus, well-lit, and the main face with text/logo is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0090.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry and out of focus to identify the product, brand, or packaging design reliably.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is centered, in focus, and well-lit, with the main face clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0091.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is blurry, making it difficult to confirm the product details and reliably match it to a reference. Text is illegible.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus and well-lit so text and design are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0085.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image is severely cropped, showing only a small portion of the box. Key branding and product name are not visible for identification.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image ensuring the full face of the product box is visible, centered, in focus, and under good lighting."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0052.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and green design elements.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0044.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is blurry and severely cropped, showing only a QR code and partial text, making product identification impossible.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the entire product packaging box is visible, in focus, and well-lit."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0087.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry and out of focus to clearly identify the product, brand, or any specific text/logos for a reliable match.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is centered, in focus, and well-lit so that text and logos are clearly legible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0045.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is extremely blurry and severely cropped, making it impossible to identify any product or packaging details reliably.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image. Ensure the box is centered, in focus, well-lit, and a full face of the packaging is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0051.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image is severely cropped, showing only a small portion of the box with a QR code and partial text, making product identification impossible.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image ensuring the full product packaging box is visible, centered, in focus, and under good lighting."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0074.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is extremely blurry and out of focus, making it impossible to identify the product, brand, or packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is centered, in focus, and well-lit so that text and design elements are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0101.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry and out of focus to clearly identify the product, brand, or any specific packaging details for a reliable match.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus, well-lit, and the main face with product details is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0077.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear box with 'SUPEREX GREEN HR+FR' text and matching green/white packaging design of the reference product.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0088.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a clear view of the RR Kabel SUPEREX GREEN packaging, matching the reference in branding, product name, and design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "WhatsApp Image 2025-10-28 at 15.24.18.jpeg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0072.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to identify the product, brand, or packaging design. No text or logos are legible.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus and well-lit so text and design are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251027-WA0007.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a clear RR Kabel SUPEREX GREEN HR+FR box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251027-WA0006.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": true,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "Multiple boxes are stacked, obscuring key product details and making it impossible to identify the specific product line or confirm a match.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with a single, clear, and unobstructed view of one product box, ensuring the main face with product name and logo is visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "WhatsApp Image 2025-10-28 at 15.24.35.jpeg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image displays the RR Kabel SUPEREX GREEN packaging, matching the brand, product line, and design of the reference image.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0067.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to clearly identify the product name, brand, or specific packaging design for a reliable match.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the product box is in clear focus and well-lit, with the main face visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0071.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to identify the product, brand, or packaging design reliably. Text and logos are illegible.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is centered, in focus, and well-lit so that text and design elements are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0065.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image is severely cropped, showing only a small portion of the box. Key branding and product line details are missing, preventing identification.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image ensuring the full product packaging box is visible, in focus, and well-lit, showing the main face with brand and product name."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251027-WA0004.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The user image shows 'RR Kabel FIREX LSOH - EBXL', which does not match the reference products 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1'.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0111.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to clearly identify the product name, brand, or packaging design for a reliable match.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus and well-lit so text and logos are clearly legible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0139.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three distinct product boxes. One matches 'RR Kabel SUPEREX GREEN', but two other products are present: 'FLAMEX HR+FR' and 'FIREX LSOH - EBXL'.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of the reference product."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0104.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to identify the product, brand, or packaging design reliably.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus and well-lit so text and design are clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251027-WA0005.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The user image shows 'RR Kabel FLAMEX HR+FR' packaging, which does not match the reference products 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1'.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0070.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is blurry and severely cropped, showing only a small, unidentifiable portion of a box with a red 'RR' logo. Product details are not visible.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image. Ensure the entire product box is centered, in focus, well-lit, and clearly visible to identify the product."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": true,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0163.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image shows three different RR Kabel products, none of which is 'RR Kabel Q1'. One box is 'RR Kabel SUPEREX GREEN', but multiple products are present.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of either 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1'."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "WhatsApp Image 2025-10-28 at 15.25.09.jpeg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The user image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0162.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows multiple RR Kabel boxes, one of which is 'SUPEREX GREEN HR+FR' matching the reference product.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0028.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows a single, clear RR Kabel SUPEREX GREEN box, matching the reference product's branding and design.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0148.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "Multiple products are visible. One box matches 'RR Kabel SUPEREX GREEN', but two other distinct products are also present.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of the desired product."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0160.jpg",
+    "model_output": {
+      "is_product_match": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "The image contains three distinct product boxes. One matches 'RR Kabel SUPEREX GREEN', but the other two are different products (Firex LSOH-EBXL and Flamex HR+FR).",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of either 'RR Kabel SUPEREX GREEN' or 'RR Kabel Q1' centered, in focus, and with good lighting."
+    },
+    "scores": {
+      "is_product_match": true,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0161.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "Multiple products are visible, preventing a single product match. The leftmost box is RR Kabel SUPEREX GREEN.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one product box clearly visible and centered."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0149.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "Multiple products are visible, and the image is blurry, preventing clear identification of all items. One box matches 'RR Kabel SUPEREX GREEN'.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide a clear, well-lit image showing only one product box in focus, with its main face visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0029.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image clearly shows a single RR Kabel SUPEREX GREEN box, matching the brand, product line, and packaging design of the reference.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0159.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "None",
+      "reason": "Multiple products are visible. One box matches 'RR Kabel SUPEREX GREEN', but two other distinct products are also present.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": true,
+      "request_new_image_reason": "Please provide an image with only one clear, identifiable packaging box of the product."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0158.jpg",
+    "model_output": {
+      "is_product_match": true,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false,
+      "product": "RR Kabel SUPEREX GREEN",
+      "reason": "The image shows multiple products, including one 'RR Kabel SUPEREX GREEN' box which matches the reference product in brand, product line, and packaging design.",
+      "is_receipt_image": false,
+      "barcode_present": true,
+      "request_new_image": false,
+      "request_new_image_reason": null
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": false,
+      "multiple_products": true,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": false
+    }
+  },
+  {
+    "image": "IMG-20251028-WA0038.jpg",
+    "model_output": {
+      "is_product_match": null,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true,
+      "product": "None",
+      "reason": "The image is too blurry to clearly identify the product name, brand details, or packaging design for a reliable match.",
+      "is_receipt_image": false,
+      "barcode_present": false,
+      "request_new_image": true,
+      "request_new_image_reason": "Please retake the image, ensuring the box is in focus, well-lit, and the main face with product details is clearly visible."
+    },
+    "scores": {
+      "is_product_match": false,
+      "request_new_image": true,
+      "multiple_products": false,
+      "partial_or_occluded": false,
+      "blurry_or_unclear": true
+    }
+  }
+]

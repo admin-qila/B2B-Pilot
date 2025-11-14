@@ -14,6 +14,8 @@ import csv
 from google import genai
 from google.genai import types
 import ast
+from dotenv import load_dotenv
+load_dotenv()
 
 
 # Configure logging
@@ -265,6 +267,47 @@ def product_counterfeit_testing(img,
     return result.text
 
 
+def rejected_product_counterfeit_testing(img,
+                                system_prompt_name ="RR_product_rejected_system_prompt_v1",
+                                user_prompt = "Can you find any signs of a counterfeit product in the User images?",
+                                model_name ="gemini-2.5-flash"
+                                ):
+    reference_images = [
+        "RR_FSE//RR-Q1/Q1BoxTemplate.jpg"
+    ]
+    reference_image_context = ["box template"]
+    response_structure = {
+        "type": "OBJECT",
+        "properties":    {
+              "is_counterfeit": {"type": "STRING", "enum": ["true", "false", "unknown"]},
+              "confidence":{"type": "STRING", "enum": ["low", "medium", "high"]},
+              "summary": {"type": "STRING", "nullable": False},
+              "evidence": {"type": "ARRAY",
+                           "items": {
+                                "type": "OBJECT",
+                                "properties": {
+                                        "attribute": {"type": "STRING", "nullable": True},
+                                        "detail": {"type": "STRING", "nullable": False}
+                                            }
+                                    }
+                            }
+                    }
+                }
+    #system prompt
+    system_prompt_ref = load_prompts(name= system_prompt_name)
+    result = compare_user_images(
+                user_files=img,
+                user_prompt=user_prompt,
+                system_prompt_ref=system_prompt_ref,
+                response_structure=response_structure,
+                reference_images=reference_images,
+                reference_image_context=reference_image_context,
+                model_name=model_name
+            )
+    return result.text
+
+
+
 def extract_user_images_info(
     user_files: List,
     user_prompt: str,
@@ -463,22 +506,36 @@ def _process_with_analysis(
         elif result["multiple_products"]:
             rejected_images.append(img.name)
             rejected_images_reason += f"{len(rejected_images)}. {result['reason']}"
-            continue
+            reject_images_check = rejected_product_counterfeit_testing([img])
+            parsed_reject = safe_json_parse(reject_images_check, context="rejected_product_counterfeit_testing")
+            if parsed_reject['is_counterfeit'] == 'true' and parsed_reject['confidence'] in ['high','medium']:
+                logger.info(f"rejected_product_counterfeit_testing: {parsed_reject}")
+                rejected_images_reason += f"\n *Counterfeit Analysis*: {parsed_reject['summary']}"
+
         elif result["is_product_match"]:
             if result["partial_or_occluded"] or result["blurry_or_unclear"]:
                 rejected_images.append(img.name)
                 rejected_images_reason += f"{len(rejected_images)}. {result['reason']}"
                 if result["request_new_image"]:
                     rejected_images_reason += result["request_new_image_reason"]
+                reject_images_check = rejected_product_counterfeit_testing([img])
+                parsed_reject = safe_json_parse(reject_images_check, context="rejected_product_counterfeit_testing")
+                if parsed_reject['is_counterfeit'] == 'true' and parsed_reject['confidence'] in ['high', 'medium']:
+                    logger.info(f"rejected_product_counterfeit_testing: {parsed_reject}")
+                    rejected_images_reason += f"\n *Counterfeit Analysis*: {parsed_reject['summary']}"
             else:
                 product.append(result["product"])
                 product_images.append(img)
                 if result["barcode_present"]:
                     barcode_images.append(img)
-            continue
         else:
             rejected_images.append(img.name)
             rejected_images_reason += f"{len(rejected_images)}. {result['reason']}"
+            reject_images_check = rejected_product_counterfeit_testing([img])
+            parsed_reject = safe_json_parse(reject_images_check, context="rejected_product_counterfeit_testing")
+            if parsed_reject['is_counterfeit'] == 'true' and parsed_reject['confidence'] in ['high', 'medium']:
+                logger.info(f"rejected_product_counterfeit_testing: {parsed_reject}")
+                rejected_images_reason += f"\n *Counterfeit Analysis*: {parsed_reject['summary']}"
 
     # ---- REJECTED IMAGE SUMMARY ----
     rejected_images_text = (

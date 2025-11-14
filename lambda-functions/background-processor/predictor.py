@@ -14,8 +14,8 @@ import csv
 from google import genai
 from google.genai import types
 import ast
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 
 # Configure logging

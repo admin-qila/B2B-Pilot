@@ -121,7 +121,7 @@ class ResponseFactory:
         elif message:
             resp.message(message)
         else:
-            resp.message("Your data is being analyzed 🔍 We'll get back to you shortly ⏳")
+            resp.message("Processing your request... ⏳\n\nDepending on the complexity of the analysis, responses may take 30–120 seconds. Some may take a bit longer. Thank you for your patience!")
         
         return {
             "statusCode": 200,

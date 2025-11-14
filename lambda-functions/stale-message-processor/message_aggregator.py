@@ -14,6 +14,13 @@ from supabase import create_client, Client
 
 logger = logging.getLogger(__name__)
 
+def get_table_name(base_name: str) -> str:
+    """Get the appropriate table name based on environment"""
+    environment = os.environ.get("ENVIRONMENT", "prod")
+    if environment == "staging":
+        return f"{base_name}_staging"
+    return base_name
+
 class MessageAggregator:
     """Aggregates multiple WhatsApp media messages into a single unified message"""
     
@@ -72,7 +79,7 @@ class MessageAggregator:
             group_key = f"{unified_message.phone_number}#{group_timestamp}"
             
             # Check if group already exists
-            response = self.supabase.table('whatsapp_message_groups')\
+            response = self.supabase.table(get_table_name('whatsapp_message_groups'))\
                 .select('*')\
                 .eq('group_key', group_key)\
                 .execute()
@@ -86,7 +93,7 @@ class MessageAggregator:
                 messages.append(unified_message.to_dict())
                 
                 # Update Supabase
-                self.supabase.table('whatsapp_message_groups')\
+                self.supabase.table(get_table_name('whatsapp_message_groups'))\
                     .update({
                         'messages': json.dumps(messages),
                         'message_count': len(messages),
@@ -108,7 +115,7 @@ class MessageAggregator:
                 
                 if should_process:
                     # Delete the group and return aggregated message
-                    self.supabase.table('whatsapp_message_groups')\
+                    self.supabase.table(get_table_name('whatsapp_message_groups'))\
                         .delete()\
                         .eq('group_key', group_key)\
                         .execute()
@@ -125,7 +132,7 @@ class MessageAggregator:
                 # First message in group, create new entry
                 messages = [unified_message.to_dict()]
                 
-                self.supabase.table('whatsapp_message_groups').insert({
+                self.supabase.table(get_table_name('whatsapp_message_groups')).insert({
                     'group_key': group_key,
                     'phone_number': unified_message.phone_number,
                     'messages': json.dumps(messages),
@@ -193,7 +200,7 @@ class MessageAggregator:
             cutoff_time = datetime.utcnow() - timedelta(seconds=max_age_seconds)
             
             # Find stale message groups
-            response = self.supabase.table('whatsapp_message_groups')\
+            response = self.supabase.table(get_table_name('whatsapp_message_groups'))\
                 .select('*')\
                 .lt('created_at', cutoff_time.isoformat())\
                 .execute()
@@ -209,7 +216,7 @@ class MessageAggregator:
                 stale_messages.append(aggregated)
                 
                 # Delete the group
-                self.supabase.table('whatsapp_message_groups')\
+                self.supabase.table(get_table_name('whatsapp_message_groups'))\
                     .delete()\
                     .eq('group_key', group_key)\
                     .execute()
@@ -233,7 +240,7 @@ class MessageAggregator:
         try:
             cutoff_time = datetime.utcnow() - timedelta(minutes=max_age_minutes)
             
-            response = self.supabase.table('whatsapp_message_groups')\
+            response = self.supabase.table(get_table_name('whatsapp_message_groups'))\
                 .delete()\
                 .lt('created_at', cutoff_time.isoformat())\
                 .execute()

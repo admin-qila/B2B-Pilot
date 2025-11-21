@@ -1,7 +1,7 @@
 import os
 import json
 
-def create_default_ground_truth(folder_path):
+def create_default_ground_truth_classifictaion(folder_path):
     """Create a ground truth dict with default values for all image files in the folder."""
     ground_truth = {}
     for filename in os.listdir(folder_path):
@@ -21,6 +21,21 @@ def create_default_ground_truth(folder_path):
     print(f"✅ Ground truth file created for {len(ground_truth)} images.")
     return ground_truth
 
+def create_default_ground_truth_counterfeit_detection(folder_path):
+    """Create a ground truth dict with default values for all image files in the folder."""
+    ground_truth = {}
+    for filename in os.listdir(folder_path):
+        if filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            ground_truth[filename] = {
+                "is_counterfeit": 'false'
+            }
+
+    # Save to a JSON file for reference
+    with open("RR_FSE_test/ground_truth_default/rr_supergreen_not_counterfeit.json", "w") as f:
+        json.dump(ground_truth, f, indent=2)
+
+    print(f"✅ Ground truth file created for {len(ground_truth)} images.")
+    return ground_truth
 
 # Example usage:
-ground_truth = create_default_ground_truth("RR_FSE_test/RR-Bad")
+ground_truth = create_default_ground_truth_counterfeit_detection("RR_FSE_test/RR-Bad")

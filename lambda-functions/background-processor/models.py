@@ -18,12 +18,19 @@ logger = logging.getLogger(__name__)
 # Initialize Supabase client
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_KEY")
+environment = os.environ.get("ENVIRONMENT", "prod")
 
 if not supabase_url or not supabase_key:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables are required")
 
 supabase: Client = create_client(supabase_url, supabase_key)
 logger.info("Supabase client initialized successfully")
+
+def get_table_name(base_name: str) -> str:
+    """Get the appropriate table name based on environment"""
+    if environment == "staging":
+        return f"{base_name}_staging"
+    return base_name
 
 @dataclass
 class UserSubmission:
@@ -284,7 +291,7 @@ class DatabaseManager:
                 'message_id': submission.message_id
             }
             
-            response = self.supabase.table('b2b_pilot_user_submissions').insert(data).execute()
+            response = self.supabase.table(get_table_name('b2b_pilot_user_submissions')).insert(data).execute()
             if response.data:
                 logger.info(f"Created submission for {submission.phone_number}")
                 return response.data[0]['id']
@@ -297,7 +304,7 @@ class DatabaseManager:
     def get_submission_by_id(self, submission_id: str) -> Optional[Dict]:
         """Get a submission by its ID"""
         try:
-            response = self.supabase.table('b2b_pilot_user_submissions')\
+            response = self.supabase.table(get_table_name('b2b_pilot_user_submissions'))\
                 .select('*')\
                 .eq('id', submission_id)\
                 .execute()
@@ -313,7 +320,7 @@ class DatabaseManager:
     def get_submission_by_message_id(self, message_id: str) -> Optional[Dict]:
         """Get a submission by its message_id (for idempotency check)"""
         try:
-            response = self.supabase.table('b2b_pilot_user_submissions')\
+            response = self.supabase.table(get_table_name('b2b_pilot_user_submissions'))\
                 .select('*')\
                 .eq('message_id', message_id)\
                 .limit(1)\
@@ -330,7 +337,7 @@ class DatabaseManager:
     def get_latest_submission_without_feedback(self, phone_number: str) -> Optional[Dict]:
         """Get the latest submission for a phone number that doesn't have feedback yet"""
         try:
-            response = self.supabase.table('b2b_pilot_user_submissions')\
+            response = self.supabase.table(get_table_name('b2b_pilot_user_submissions'))\
                 .select('*')\
                 .eq('phone_number', phone_number)\
                 .order('created_at', desc=True)\
@@ -353,7 +360,7 @@ class DatabaseManager:
                 'feedback_timestamp': datetime.utcnow().isoformat()
             }
             
-            self.supabase.table('b2b_pilot_user_submissions')\
+            self.supabase.table(get_table_name('b2b_pilot_user_submissions'))\
                 .update(data)\
                 .eq('id', submission_id)\
                 .execute()
@@ -482,7 +489,7 @@ class DatabaseManager:
     def get_recent_submissions(self, phone_number: str, limit: int = 10) -> List[Dict]:
         """Get recent submissions for a user"""
         try:
-            response = self.supabase.table('b2b_pilot_user_submissions')\
+            response = self.supabase.table(get_table_name('b2b_pilot_user_submissions'))\
                 .select('*')\
                 .eq('phone_number', phone_number)\
                 .order('created_at', desc=True)\
@@ -499,7 +506,7 @@ class DatabaseManager:
         """Get comprehensive stats for a user"""
         try:
             # Get submission stats
-            submissions = self.supabase.table('b2b_pilot_user_submissions')\
+            submissions = self.supabase.table(get_table_name('b2b_pilot_user_submissions'))\
                 .select('*')\
                 .eq('phone_number', phone_number)\
                 .execute()

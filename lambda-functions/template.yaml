@@ -61,6 +61,7 @@ Globals:
     MemorySize: 512
     Environment:
       Variables:
+        ENVIRONMENT: !Ref Environment
         TWILIO_ACCOUNT_SID: !Ref TwilioAccountSid
         TWILIO_AUTH_TOKEN: !Ref TwilioAuthToken
         TWILIO_PHONE_NUMBER: !Ref TwilioPhoneNumber

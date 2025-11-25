@@ -1,0 +1,2 @@
+# No external requirements for shared utilities
+# This file ensures SAM recognizes this as a layer

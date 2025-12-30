@@ -53,12 +53,19 @@ Parameters:
     Description: Optional API key for webapp/mobile clients
     Default: ""
     NoEcho: true
+  CriticalAlertSmsNumber:
+    Type: String
+    Description: "E.164 phone number for SMS critical alerts (for example, +15551234567)"
+  CriticalAlertVoiceNumber:
+    Type: String
+    Description: "E.164 phone number for voice-call critical alerts (for example, +15551234567). Used by downstream integrations for voice escalation."
 
 Globals:
   Function:
     Timeout: 300
     Runtime: python3.12
     MemorySize: 512
+    Tracing: Active  # Enable AWS X-Ray tracing for all Lambda functions
     Environment:
       Variables:
         TWILIO_ACCOUNT_SID: !Ref TwilioAccountSid
@@ -72,6 +79,8 @@ Globals:
         GOOGLE_SAFE_BROWSING_KEY: !Ref GoogleSafeBrowsingKey
         S3_BUCKET_NAME: !Ref S3BucketName
         API_KEY: !Ref ApiKey
+  Api:
+    TracingEnabled: true  # Enable AWS X-Ray tracing for all API Gateway stages created via SAM
 
 Resources:
 
@@ -86,6 +95,31 @@ Resources:
           Value: B2B-Pilot
         - Key: Purpose
           Value: WhatsAppProcessing
+
+  # SNS topic for critical production alerts from CloudWatch alarms
+  CriticalAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "b2b-pilot-critical-alerts-${Environment}"
+      DisplayName: "B2B Pilot Critical Alerts"
+      Tags:
+        - Key: Application
+          Value: B2B-Pilot
+        - Key: Purpose
+          Value: CriticalAlerts
+
+  # SMS subscription for critical alerts; phone number is parameterized per environment
+  CriticalAlertsSmsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref CriticalAlertsTopic
+      Protocol: sms
+      Endpoint: !Ref CriticalAlertSmsNumber
+
+  # NOTE: SNS does not support direct voice-call subscriptions.
+  # To implement voice call escalation with AWS-native services, subscribe a Lambda function
+  # to CriticalAlertsTopic and have it invoke Amazon Pinpoint Voice or Amazon Connect using
+  # the CriticalAlertVoiceNumber parameter as the destination phone number.
 
   # Dead Letter Queue for failed messages (SNS -> Lambda failures)
   DeadLetterQueue:
@@ -219,22 +253,29 @@ Resources:
             Enabled: true
 
   # CloudWatch Alarms
+
+  # Alarm when SNS messages fail to deliver to any subscription
   SNSFailedDeliveryAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub "b2b-pilot-sns-failed-delivery-${Environment}"
-      AlarmDescription: Alert when SNS messages fail to deliver to Lambda
+      AlarmDescription: Alert when SNS messages fail to deliver to subscribers
       MetricName: NumberOfNotificationsFailed
       Namespace: AWS/SNS
       Statistic: Sum
-      Period: 300
+      Period: 60  # 1-minute evaluation for faster detection
       EvaluationPeriods: 1
+      DatapointsToAlarm: 1
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
       Dimensions:
         - Name: TopicName
           Value: !GetAtt MessageTopic.TopicName
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
 
+  # Alarm when messages accumulate in the DLQ
   DLQAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -243,14 +284,83 @@ Resources:
       MetricName: ApproximateNumberOfMessagesVisible
       Namespace: AWS/SQS
       Statistic: Sum
-      Period: 300
+      Period: 60  # 1-minute period for quicker DLQ visibility
       EvaluationPeriods: 1
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
       Dimensions:
         - Name: QueueName
           Value: !GetAtt DeadLetterQueue.QueueName
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
 
+  # API Gateway 5XX error alarm
+  Api5XXErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-api-5xx-errors-${Environment}"
+      AlarmDescription: Alert when API Gateway returns 5XX errors
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub "b2b-pilot-webhook-api-${Environment}"
+        - Name: Stage
+          Value: !Ref Environment
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
+
+  # Webhook Lambda error alarm
+  WebhookFunctionErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-webhook-errors-${Environment}"
+      AlarmDescription: Alert when webhook Lambda errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref WebhookFunction
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
+
+  # Presigned URL Lambda error alarm
+  PresignedUrlFunctionErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-presigned-url-errors-${Environment}"
+      AlarmDescription: Alert when presigned URL Lambda errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PresignedUrlFunction
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
+
+  # Processor Lambda error alarm (updated to route to CriticalAlertsTopic)
   ProcessorErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -259,14 +369,18 @@ Resources:
       MetricName: Errors
       Namespace: AWS/Lambda
       Statistic: Sum
-      Period: 300
+      Period: 60
       EvaluationPeriods: 1
       Threshold: 5
       ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
       Dimensions:
         - Name: FunctionName
           Value: !Ref ProcessorFunction
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
 
+  # Stale message processor Lambda error alarm (updated to route to CriticalAlertsTopic)
   StaleProcessorErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -275,13 +389,188 @@ Resources:
       MetricName: Errors
       Namespace: AWS/Lambda
       Statistic: Sum
-      Period: 300
+      Period: 60
       EvaluationPeriods: 2
       Threshold: 10
       ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
       Dimensions:
         - Name: FunctionName
           Value: !Ref StaleMessageProcessorFunction
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
+
+  # Webhook Lambda duration p95 alarm
+  WebhookFunctionDurationP95Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-webhook-duration-p95-${Environment}"
+      AlarmDescription: Alert when webhook Lambda p95 duration is high
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      ExtendedStatistic: p95
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 30000  # 30 seconds p95
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref WebhookFunction
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
+
+  # Presigned URL Lambda duration p95 alarm
+  PresignedUrlFunctionDurationP95Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-presigned-url-duration-p95-${Environment}"
+      AlarmDescription: Alert when presigned URL Lambda p95 duration is high
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      ExtendedStatistic: p95
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 30000
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PresignedUrlFunction
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
+
+  # Processor Lambda duration p95 alarm
+  ProcessorFunctionDurationP95Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-processor-duration-p95-${Environment}"
+      AlarmDescription: Alert when processor Lambda p95 duration is high
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      ExtendedStatistic: p95
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 60000  # 60 seconds p95 for background processing
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ProcessorFunction
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
+
+  # Stale message processor Lambda duration p95 alarm
+  StaleProcessorFunctionDurationP95Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "b2b-pilot-stale-processor-duration-p95-${Environment}"
+      AlarmDescription: Alert when stale message processor Lambda p95 duration is high
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      ExtendedStatistic: p95
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 60000
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref StaleMessageProcessorFunction
+      AlarmActions:
+        - !Ref CriticalAlertsTopic
+
+  # CloudWatch Dashboard aggregating key API, Lambda, and SNS metrics
+  ObservabilityDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub "b2b-pilot-observability-${Environment}"
+      DashboardBody: !Sub
+        - |
+          {
+            "widgets": [
+              {
+                "type": "metric",
+                "x": 0,
+                "y": 0,
+                "width": 12,
+                "height": 6,
+                "properties": {
+                  "title": "API Gateway 5XX Errors",
+                  "region": "${AWS::Region}",
+                  "stat": "Sum",
+                  "period": 60,
+                  "metrics": [
+                    [ "AWS/ApiGateway", "5XXError", "ApiName", "${ApiName}", "Stage", "${Environment}" ]
+                  ]
+                }
+              },
+              {
+                "type": "metric",
+                "x": 12,
+                "y": 0,
+                "width": 12,
+                "height": 6,
+                "properties": {
+                  "title": "Lambda Errors",
+                  "region": "${AWS::Region}",
+                  "stat": "Sum",
+                  "period": 60,
+                  "metrics": [
+                    [ "AWS/Lambda", "Errors", "FunctionName", "${WebhookFunctionName}" ],
+                    [ ".", "Errors", "FunctionName", "${ProcessorFunctionName}" ],
+                    [ ".", "Errors", "FunctionName", "${PresignedUrlFunctionName}" ],
+                    [ ".", "Errors", "FunctionName", "${StaleMessageProcessorFunctionName}" ]
+                  ]
+                }
+              },
+              {
+                "type": "metric",
+                "x": 0,
+                "y": 6,
+                "width": 12,
+                "height": 6,
+                "properties": {
+                  "title": "Lambda Duration p95",
+                  "region": "${AWS::Region}",
+                  "stat": "p95",
+                  "period": 60,
+                  "metrics": [
+                    [ "AWS/Lambda", "Duration", "FunctionName", "${WebhookFunctionName}" ],
+                    [ ".", "Duration", "FunctionName", "${ProcessorFunctionName}" ],
+                    [ ".", "Duration", "FunctionName", "${PresignedUrlFunctionName}" ],
+                    [ ".", "Duration", "FunctionName", "${StaleMessageProcessorFunctionName}" ]
+                  ]
+                }
+              },
+              {
+                "type": "metric",
+                "x": 12,
+                "y": 6,
+                "width": 12,
+                "height": 6,
+                "properties": {
+                  "title": "SNS Notification Failures",
+                  "region": "${AWS::Region}",
+                  "stat": "Sum",
+                  "period": 60,
+                  "metrics": [
+                    [ "AWS/SNS", "NumberOfNotificationsFailed", "TopicName", "${MessageTopicName}" ]
+                  ]
+                }
+              }
+            ]
+          }
+        - ApiName: !Sub "b2b-pilot-webhook-api-${Environment}"
+          WebhookFunctionName: !Ref WebhookFunction
+          ProcessorFunctionName: !Ref ProcessorFunction
+          PresignedUrlFunctionName: !Ref PresignedUrlFunction
+          StaleMessageProcessorFunctionName: !Ref StaleMessageProcessorFunction
+          MessageTopicName: !GetAtt MessageTopic.TopicName
 
 Outputs:
   WebhookUrl:

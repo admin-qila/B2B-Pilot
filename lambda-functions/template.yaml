@@ -56,9 +56,11 @@ Parameters:
   CriticalAlertSmsNumber:
     Type: String
     Description: "E.164 phone number for SMS critical alerts (for example, +15551234567)"
+    Default: "+16504557855"  # Optional: default SMS destination; can be overridden per environment
   CriticalAlertVoiceNumber:
     Type: String
     Description: "E.164 phone number for voice-call critical alerts (for example, +15551234567). Used by downstream integrations for voice escalation."
+    Default: ""  # Optional: empty by default; used only if a downstream voice integration is configured
 
 Globals:
   Function:

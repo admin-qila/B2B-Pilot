@@ -70,6 +70,7 @@ Globals:
     Tracing: Active  # Enable AWS X-Ray tracing for all Lambda functions
     Environment:
       Variables:
+        ENVIRONMENT: !Ref Environment
         TWILIO_ACCOUNT_SID: !Ref TwilioAccountSid
         TWILIO_AUTH_TOKEN: !Ref TwilioAuthToken
         TWILIO_PHONE_NUMBER: !Ref TwilioPhoneNumber
